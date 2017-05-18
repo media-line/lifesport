@@ -1,0 +1,72 @@
+<?
+	$MESS["CATALOG_NOT_AVAILABLE"] = "Нет в наличии";
+	$MESS["CATALOG_QUANTITY"] = "Количество";
+	$MESS["CATALOG_QUANTITY_FROM_TO"] = "От #FROM# до #TO#";
+	$MESS["CATALOG_QUANTITY_FROM"] = "От #FROM#";
+	$MESS["CATALOG_QUANTITY_TO"] = "До #TO#";
+	$MESS["CT_BCS_QUANTITY"] = "Количество";
+	$MESS["CT_BCS_ELEMENT_DELETE_CONFIRM"] = "Будет удалена вся информация, связанная с этой записью. Продолжить?";
+	$MESS["NO_PRODUCTS"] = "К сожалению, данный раздел пуст. <br />Вы можете поискать необходимые товары в других:";
+	$MESS['CATALOG_FROM'] = 'от';
+	$MESS["CT_NAME_NOT_FOUND"] = "Товары не найдены";
+	$MESS["CT_NAME_SHOW_ALL"] = "Показать все";
+	$MESS["CATALOG_VIEW_MORE"] = "Показать основные";
+	$MESS["PROPERTIES"] = "Характеристики";
+	$MESS["CATALOG_READ_MORE"] = "Подробнее";
+	$MESS["CATALOG_ADD"] = "В корзину";
+	$MESS["CATALOG_WISH"] = "Отложить";
+	$MESS["CATALOG_WISH_OUT"] = "В отложенных";
+	$MESS["CATALOG_COMPARE"] = "Сравнить";
+	$MESS["CATALOG_COMPARE_OUT"] = "В сравнении";
+	$MESS["CATALOG_ADDED"] = "В корзине";
+	$MESS["CATALOG_SUBSCRIBE"] = "Подписаться";
+	$MESS["CATALOG_IN_SUBSCRIBE"] = "Отписаться";
+	$MESS["CATALOG_ORDER"] = "Заказать";
+	$MESS["WITHOUT_DISCOUNT"] = "Цена без скидки";
+	$MESS["EMPTY_CATALOG_DESCR"] = "Каталог пуст";
+	$MESS['CT_IS_AVAILABLE'] = "Есть в наличии";
+	$MESS['DONT_AVAILABLE'] = "Нет в наличии";
+	$MESS["MANY_GOODS"] = "Много";
+	$MESS["SUFFICIENT_GOODS"] = "Достаточно";
+	$MESS["FEW_GOODS"] = "Мало";
+	$MESS["NO_GOODS"] = "Под заказ";
+	$MESS["MEASURE_DEFAULT"] = "шт";
+	$MESS["CATALOG_IN_CART"] = "В корзине";
+	$MESS["TITLE_QUANTITY"] = "штук";
+	$MESS["UNTIL_AKC"] = "До конца акции";
+	$MESS["TITLE_QUANTITY_BLOCK"] = "Остаток";
+	$MESS["CATALOG_ECONOMY"] = "Экономия";
+
+
+	$MESS["CPSL_TPL_MESS_BTN_DETAIL"] = "Подробнее";
+	$MESS["CPSL_ADD_TO_BASKET_OK"] = "Товар добавлен в корзину";
+	$MESS["CPSL_CATALOG_TITLE_ERROR"] = "Ошибка";
+	$MESS["CPSL_CATALOG_TITLE_BASKET_PROPS"] = "Свойства товара, добавляемые в корзину";
+	$MESS["CPSL_CATALOG_BASKET_UNKNOWN_ERROR"] = "Неизвестная ошибка при добавлении товара в корзину";
+	$MESS["CPSL_CATALOG_BTN_MESSAGE_CLOSE"] = "Закрыть";
+	$MESS["CPSL_CATALOG_BTN_MESSAGE_BASKET_REDIRECT"] = "Перейти в корзину";
+	$MESS["CPSL_CATALOG_BTN_MESSAGE_SEND_PROPS"] = "Выбрать";
+	$MESS["CPSL_TPL_MESS_BTN_SUBSCRIBE_DELETE"] = "Удалить";
+	$MESS["CPSL_STATUS_SUCCESS"] = "Успешно";
+	$MESS["CPSL_STATUS_ERROR"] = "Произошла ошибка";
+	$MESS["CPSL_TITLE_PAGE_WHEN_ACCESSING"] = "Получение доступа к просмотру подписок";
+	$MESS["CPSL_HEADLINE_FORM_SEND_CODE"] = "Введите контакт для отправки кода проверки";
+	$MESS["CPSL_CONTACT_TYPE_SELECTION"] = "Выберите тип контакта";
+	$MESS["CPSL_CONTACT_TYPE_NAME"] = "Контакт";
+	$MESS["CPSL_BUTTON_SUBMIT_CODE"] = "Отправить код";
+	$MESS["CPSL_HEADLINE_FORM_FOR_ACCESSING"] = "Введите код проверки для доступа к просмотру";
+	$MESS["CPSL_CODE_LABLE"] = "Проверочный код";
+	$MESS["CPSL_BUTTON_SUBMIT_ACCESS"] = "Получить доступ";
+	$MESS["CPSL_IDENTIFICATION_REQUEST_OK"] = "Вам отправлен код доступа";
+	$MESS["CPSL_IDENTIFICATION_REQUEST_FAIL"] = "Произошла ошибка";
+	$MESS["CPSL_SUBSCRIBE_NOT_FOUND"] = "Вы не подписаны на товары";
+	$MESS["CPSL_SUBSCRIBE_TITLE"] = "Список товаров на которые вы подписаны";
+	$MESS["CPSL_SUBSCRIBE_TITLE_NEW"] = "Ваши подписки";
+	$MESS["CPSL_SUBSCRIBE_POPUP_TITLE_AUTHORIZE"] = "Получение доступа к подпискам";
+	$MESS["CPSL_SUBSCRIBE_POPUP_TITLE_IDENTIFICATION"] = "Получение доступа к подпискам";
+	$MESS["CPSL_SUBSCRIBE_POPUP_TITLE_UNSUBSCRIBE"] = "Отписка от товара";
+	$MESS["CPSL_SUBSCRIBE_PAGE_TITLE_AUTHORIZE"] = "Для просмотра списка подписок необходимо
+	<a href=\"javascript:void(0);\" id=\"cpsl-auth\">авторизоваться</a> или
+	<a href=\"javascript:void(0);\" id=\"cpsl-identification\">получить код доступа</a>";
+	$MESS["CPSL_TPL_MESS_BTN_UNSUBSCRIBE"] = "Отписаться";
+?>
