@@ -479,8 +479,21 @@ setViewedProduct(<?=$arResult['ID']?>, <?=CUtil::PhpToJSObject($arViewedData, fa
 							</div>
 						</div>
 					<?}?>
-					<?=$arQuantityData["HTML"];?>
-					<?if($arParams["USE_RATING"] == "Y"):?>
+
+                    <!-- How much products in the shop -->
+
+                        <?/*=$arQuantityData["HTML"];*/?>
+                    <div class="quantity">
+                        <?php
+                            //echo $arResult["ID"];
+                        $resStore = CCatalogStore::GetList(array(), array("PRODUCT_ID" => "787"),false,false, array());
+                        var_dump($resStore);
+                        ?>
+                    </div>
+
+                    <!-- How much products in the shop -->
+
+                    <?if($arParams["USE_RATING"] == "Y"):?>
 						<div class="rating">
 							<?$APPLICATION->IncludeComponent(
 							   "bitrix:iblock.vote",

@@ -119,21 +119,24 @@ if (!empty($arSetupErrors))
 
 <?php
 
-$array = array();
-$fileopen = fopen($_SERVER['DOCUMENT_ROOT'] . $_POST["URL_DATA_FILE"], "r");
-$hendler = fgetcsv($fileopen, "0", ";", '"');
+$array = [];
+$fh = fopen($_SERVER['DOCUMENT_ROOT'] . $_POST["URL_DATA_FILE"], 'r');
+while (($info = fgetcsv($fh, 1000, "@")) !== false) {
+    // выводим масив результат
+    $tmp = implode("",$info);
+    $value = explode(";", $tmp);
+    $push = array_push($array, $value);
+}
 
-/*while (($mas = fgetcsv($fileopen, 0, ";")) != false) {
-    $handler = fgetcsv($fileopen, 0, ";");
-    $push = array_push($array, $handler);
-}*/
+$fileclose = fclose($fh);
 
 ?>
+
 <pre>
-<?php
-var_dump($hendler);
-?>
-    </pre>
+    <?php
+        var_dump($array);
+    ?>
+</pre>
 
 <script type="text/javascript">
 
