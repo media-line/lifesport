@@ -45,44 +45,6 @@ if (($ACTION == 'IMPORT_EDIT' || $ACTION == 'IMPORT_COPY') && $STEP == 1)
 		$DATA_FILE_NAME = $arOldSetupVars['DATA_FILE_NAME'];
 }
 
-if ($STEP > 1)
-{
-	if (strlen($URL_DATA_FILE) > 0 && file_exists($_SERVER["DOCUMENT_ROOT"].$URL_DATA_FILE) && is_file($_SERVER["DOCUMENT_ROOT"].$URL_DATA_FILE) && $APPLICATION->GetFileAccessPermission($URL_DATA_FILE)>="R")
-		$DATA_FILE_NAME = $URL_DATA_FILE;
-
-	if (strlen($DATA_FILE_NAME) <= 0)
-		$arSetupErrors[] = GetMessage("CATI_NO_DATA_FILE");
-
-	if (empty($arSetupErrors))
-	{
-		$IBLOCK_ID = (int)$IBLOCK_ID;
-		$arIBlock = array();
-		if ($IBLOCK_ID <= 0)
-		{
-			$arSetupErrors[] = GetMessage("CATI_NO_IBLOCK");
-		}
-		else
-		{
-			$arIBlock = CIBlock::GetArrayByID($IBLOCK_ID);
-			if (false === $arIBlock)
-			{
-				$arSetupErrors[] = GetMessage("CATI_NO_IBLOCK");
-			}
-		}
-	}
-
-	if (empty($arSetupErrors))
-	{
-		if (!CIBlockRights::UserHasRightTo($IBLOCK_ID, $IBLOCK_ID, 'iblock_admin_display'))
-			$arSetupErrors[] = GetMessage("CATI_NO_IBLOCK_RIGHTS");
-	}
-
-	if (!empty($arSetupErrors))
-	{
-		$STEP = 1;
-	}
-}
-
 //********************  END ACTIONS  **********************************//
 
 $aMenu = array(
@@ -139,53 +101,24 @@ CAdminFileDialog::ShowScript(
 );
 		?></td>
 	</tr>
-	<tr>
-		<td valign="top" width="40%"><? echo GetMessage("CATI_INFOBLOCK"); ?>:</td>
-		<td valign="top" width="60%"><?
-			if (!isset($IBLOCK_ID))
-				$IBLOCK_ID = 0;
-			echo GetIBlockDropDownListEx(
-				$IBLOCK_ID,
-				'IBLOCK_TYPE_ID',
-				'IBLOCK_ID',
-				array('CHECK_PERMISSIONS' => 'Y','MIN_PERMISSION' => 'W'),
-				"",
-				"",
-				'class="adm-detail-iblock-types"',
-				'class="adm-detail-iblock-list"'
-			);
-		?></td>
+    <tr>
+		<td valign="top" width="40%">
+            <input type="submit" value="Сохранить">
+        </td>
+        <td valign="top" width="60%"></td>
 	</tr>
-	<?
+    <?
 }
 
 $tabControl->EndTab();
 
 $tabControl->BeginNextTab();
 
-?></form>
+?>
+</form>
+
 <script type="text/javascript">
-<?if ($STEP < 2):?>
-tabControl.SelectTab("edit1");
-tabControl.DisableTab("edit2");
-tabControl.DisableTab("edit3");
-tabControl.DisableTab("edit4");
-<?elseif ($STEP == 2):?>
-tabControl.SelectTab("edit2");
-tabControl.DisableTab("edit1");
-tabControl.DisableTab("edit3");
-tabControl.DisableTab("edit4");
-<?elseif ($STEP == 3):?>
-tabControl.SelectTab("edit3");
-tabControl.DisableTab("edit1");
-tabControl.DisableTab("edit2");
-tabControl.DisableTab("edit4");
-<?elseif ($STEP == 4):?>
-tabControl.SelectTab("edit4");
-tabControl.DisableTab("edit1");
-tabControl.DisableTab("edit2");
-tabControl.DisableTab("edit3");
-<?endif;?>
+
 function showTranslitSettings()
 {
 	var useTranslit = BX('USE_TRANSLIT_Y'),
