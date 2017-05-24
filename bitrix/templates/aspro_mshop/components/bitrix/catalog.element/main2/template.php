@@ -591,19 +591,20 @@ $arViewedData = array(
                             public $namestore = "namestore";
                             public $amount = "amount";
 
-                            //формирование вывода остатка
+                            //формирование вывода остатка для всех магазинов для всех торговых предложений
                             public function EchoAmount($id, $namestore, $amount)
                             {
                                 $this->skuid = $id;
                                 $this->namestore = $namestore;
                                 $this->amount = $amount;
 
-                                foreach ($this->skuid as $key=>$value) { ?>
+                                foreach ($this->skuid as $key => $value) { ?>
                                     <div class="<?php echo $value ?>">
                                         <?php
                                         for ($r = 0; $r < count($this->namestore); $r++) { ?>
                                             <p>
-                                                <?php echo $this->namestore[$r] ?> - <?php echo $this->amount[$key+($r*count($this->skuid))] ?> шт.
+                                                <?php echo $this->namestore[$r] ?>
+                                                - <?php echo $this->amount[$key + ($r * count($this->skuid))] ?> шт.
                                             </p>
                                         <?php } ?>
                                     </div>
@@ -617,6 +618,33 @@ $arViewedData = array(
                         $echo->EchoAmount($skuid, $stores, $sum);
                         ?>
                     </div>
+
+                    <script> //скрипт скрытия и отображения в зависимости от торгового предложения
+                        function WhotID() {
+                            var params = window.location.search.replace('?','')
+                                .split('&')
+                                .reduce(
+                                    function(p,e){
+                                        var a = e.split('=');
+                                        p[ decodeURIComponent(a[0])] = decodeURIComponent(a[1]);
+                                        return p;
+                                    },
+                                    {}
+                                );
+
+                            var pid = params['oid'];
+                            console.log(pid);
+                            return pid;
+                        }
+
+                        window.addEventListener("popstate", function(e) {
+                            alert([ e.state, e.URL, e.title, e.type ].join('\n'));
+                        });
+
+                        window.onload = function () {
+                            WhotID();
+                        }
+                    </script>
 
                     <!-- /How much products in the shop -->
 
