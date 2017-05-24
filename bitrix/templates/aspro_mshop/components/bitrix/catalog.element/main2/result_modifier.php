@@ -827,7 +827,7 @@ if(strlen($arResult["DISPLAY_PROPERTIES"]["BRAND"]["VALUE"]) && $arResult["PROPE
 $arResult["BRAND_ITEM"]=$arBrand;
 
 /*stores product*/
-$arStores=CMshopCache::CCatalogStore_GetList(array(), array("ACTIVE" => "Y"), false, false, array());
+/*$arStores=CMshopCache::CCatalogStore_GetList(array(), array("ACTIVE" => "Y"), false, false, array());
 $arResult["STORES_COUNT"] = count($arStores);
 
 if(!isset($arResult['CATEGORY_PATH']) || (isset($arResult['CATEGORY_PATH']) && empty($arResult['CATEGORY_PATH'])))
@@ -839,5 +839,5 @@ if(!isset($arResult['CATEGORY_PATH']) || (isset($arResult['CATEGORY_PATH']) && e
 	}
 	if($arSectionPath)
 		$arResult['CATEGORY_PATH'] = implode('/', $arSectionPath);
-}
+}*/
 ?>

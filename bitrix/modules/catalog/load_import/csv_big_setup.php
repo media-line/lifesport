@@ -44,7 +44,6 @@ if (($ACTION == 'IMPORT_EDIT' || $ACTION == 'IMPORT_COPY') && $STEP == 1) {
     if (isset($arOldSetupVars['DATA_FILE_NAME']))
         $DATA_FILE_NAME = $arOldSetupVars['DATA_FILE_NAME'];
 }
-
 //********************  END ACTIONS  **********************************//
 
 $aMenu = array(
@@ -78,7 +77,7 @@ if (!empty($arSetupErrors))
     if ($STEP == 1) {
         ?>
         <tr class="heading">
-        <td colspan="2"><? echo GetMessage("CATI_DATA_LOADING"); ?></td>
+            <td colspan="2"><? echo GetMessage("CATI_DATA_LOADING"); ?></td>
         </tr>
         <tr>
             <td valign="top" width="40%"><? echo GetMessage("CATI_DATA_FILE_SITE"); ?>:</td>
@@ -119,27 +118,70 @@ if (!empty($arSetupErrors))
 
 <?php
 
-$array = [];
+$arIMP = [];
 $fh = fopen($_SERVER['DOCUMENT_ROOT'] . $_POST["URL_DATA_FILE"], 'r');
 while (($info = fgetcsv($fh, 1000, "@")) !== false) {
-    // выводим масив результат
-    $tmp = implode("",$info);
-    $value = explode(";", $tmp);
-    $push = array_push($array, $value);
+    //получаем преобразованный в массив csv-файл
+    array_push($arIMP, explode(";", implode("", $info)));
+}
+//получаем массив со всеми существующими торговыми предложениями из БД
+$arSKU = [];
+$res1 = $DB->Query("SELECT * FROM b_iblock_element WHERE IBLOCK_ID=22");
+while ($result = $res1->Fetch()) {
+    array_push($arSKU, $result);
 }
 
-$fileclose = fclose($fh);
+//при совпадении Артикул, Цвет, Размер, Склад надо сравнить Остаток, Цена и в случае расхождения - заменить
+//функция сравнения параметров (Артикул, Цвет, Размер, Склад) из файла и из БД, а также последующих действий
+function ComparisionParam($fromFile, $fromDB)
+{
+    $equality = 0;
+    if ($fromFile == $fromDB) {
+        $equality = $equality;
+    } elseif ($fromFile != $fromDB) {
+        $equality = $equality + 1;
+    }
+    return $equality;
+}
 
-?>
+//функция сравнения значений (Остаток, Цена) из файла импорта и из БД, а так же последующих действий
+function ComparisionValue($fromFile, $fromDB)
+{
 
-<pre>
-    <?php
-        var_dump($array);
-    ?>
-</pre>
+}
+
+//$arIMP[] - массив со всеми торговыми предложениями из файла
+//$arSKU[] - массив со всеми торговыми предложениями из БД
+
+//функция сравнения торговых предложений
+function ComparisionSKU()
+{
+
+}
+
+$fileclose = fclose($fh); ?>
+<!-- блок тестирования полученных данных -->
+<table>
+    <tr>
+        <td>
+            <pre>
+                <?php
+                var_dump($arSKU);
+                ?>
+            </pre>
+        </td>
+        <td>
+            <pre>
+                <?php
+                var_dump($arIMP);
+                ?>
+            </pre>
+        </td>
+    </tr>
+</table>
+<!-- /блок тестирования полученных данных -->
 
 <script type="text/javascript">
-
     function showTranslitSettings() {
         var useTranslit = BX('USE_TRANSLIT_Y'),
             translitLang = BX('tr_TRANSLIT_LANG'),

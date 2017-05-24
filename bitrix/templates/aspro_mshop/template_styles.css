@@ -3151,14 +3151,21 @@ input.form-control{margin-bottom:0px;}
     background-size:  auto 100% !important;
     margin-top: -1px;
 }
-.catalog_menu .menu .child_wrapp  > .depth3{
+.menu_item_l1:nth-child(5) .child_wrapp{
+    text-align: center !important;
+}
+.menu_item_l1:nth-child(5) .child_wrapp .child_wrapp-inner{
+    text-align: left;
+    display: inline-block;
+}
+.catalog_menu .menu .child_wrapp  .depth3{
     display: inline-block;
     vertical-align: top;
 }
-.catalog_menu .menu .child_wrapp  > .depth3 + .depth3{
+.catalog_menu .menu .child_wrapp  .depth3 + .depth3{
     margin-left: 30px;
 }
-.catalog_menu .menu .child_wrapp  > .depth3 a{
+.catalog_menu .menu .child_wrapp  .depth3 a{
     margin-left: 0px !important;
 }
 .catalog_menu .submenu a,
@@ -3181,7 +3188,8 @@ input.form-control{margin-bottom:0px;}
     font-size: 20px !important;
     line-height: 26px !important;
 }
-.catalog_menu  li.more .child li:not(.menu_title) a{
+.catalog_menu  li.more .child li:not(.menu_title) a,
+.catalog_menu  .child .child_wrapp .child_wrapp-inner > a{
     display: block;
 }
 .catalog_menu .submenu a:not(.depth3_title_image):first-letter,
@@ -3247,7 +3255,7 @@ ul.menu li.stretch {
     display: block;
     margin-bottom: 0 !important;
 }
-.catalog_menu .menu .submenu .child_wrapp > *{
+.catalog_menu .menu .submenu .child_wrapp > .child_wrapp-inner > *:not(.menu-banner){
     z-index: 1;
     position: relative;
 }
@@ -3341,4 +3349,8 @@ ul.menu li.stretch {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
+}
+
+.quantity p {
+	margin: 5px 0;
 }
