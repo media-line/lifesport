@@ -550,125 +550,6 @@ $arViewedData = array(
                         </div>
                     <? } ?>
 
-                    <!-- How much products in the shop -->
-                    <?php
-                    //создаем класс со значениями остатка и наименования магазина
-                    class StoreProductSKU
-                    {
-                        public $skuid = "id";
-                        public $namestore = "namestore";
-                        public $amount = "amount";
-
-                        //формирование вывода остатка для всех магазинов для всех торговых предложений
-                        public function EchoAmount($id, $namestore, $amount)
-                        {
-                            $this->skuid = $id;
-                            $this->namestore = $namestore;
-                            $this->amount = $amount;
-
-                            foreach ($this->skuid as $key => $value) { ?>
-                                <div class="<?php echo $value ?>">
-                                    <?php
-                                    for ($r = 0; $r < count($this->namestore); $r++) { ?>
-                                        <p>
-                                            <?php echo $this->namestore[$r] ?>
-                                            - <?php echo $this->amount[$key + ($r * count($this->skuid))] ?> шт.
-                                        </p>
-                                    <?php } ?>
-                                </div>
-                                <?php
-                            }
-                        }
-                    }
-                    ?>
-
-                    <div class="quantity">
-                        <?php
-                        $select_fields = Array();
-
-                        //получаем id самого товара
-                        $pid = $arResult["ID"];
-
-                        //определяем есть ли у товара торговые предложения
-                        $sku = CCatalogSku::getExistOffers($pid);
-                        if ($sku[$pid]) {
-                            //если есть, определяем id торговых предложений
-                            $ressku = CCatalogSku::getOffersList($pid);
-                            $resskuid = $ressku[$pid];
-                            $skuid = array();
-                            foreach ($resskuid as $key => $value) {
-                                array_push($skuid, $value["ID"]);
-                            };
-
-                            //получаем массив с названиями складов-магазинов
-                            $filter = Array("ACTIVE" => "Y");
-                            $resStore = CCatalogStore::GetList(array(), $filter, false, false, $select_fields);
-                            while ($sklad = $resStore->Fetch()) {
-                                $stores[] = $sklad['TITLE'];
-                            }
-
-                            //получаем массив с остатком в каждом складе-магазине
-                            $arFilter = Array("PRODUCT_ID" => $skuid);
-                            $res = CCatalogStoreProduct::GetList(Array(), $arFilter, false, false, $select_fields);
-                            while ($arRes = $res->Fetch()) {
-                                $sum[] = $arRes['AMOUNT'];
-                            }
-
-                            //выводим магазины и остаток
-                            $echo = new StoreProductSKU();
-                            $echo->EchoAmount($skuid, $stores, $sum);
-
-                        } else {
-                            echo "Информацию о количестве товара узнавайте в наших магазинах";
-                        }
-                        ?>
-                    </div>
-
-                    <script>
-                        //скрываем и отображаем количество товаров в магазине в зависимости от торгового предложения
-                        function ShowHideAmount() {
-                            //получаем id активного торгового предложения из url
-                            var params = window.location.search.replace('?', '')
-                                .split('&')
-                                .reduce(
-                                    function (p, e) {
-                                        var a = e.split('=');
-                                        p[decodeURIComponent(a[0])] = decodeURIComponent(a[1]);
-                                        return p;
-                                    },
-                                    {}
-                                );
-                            var pid = params['oid'];
-
-                            //определяем элементы с количеством товаров в зависимости от торгового предложения
-                            var par = document.getElementsByClassName('quantity')[0];
-                            var targ = par.getElementsByTagName('div');
-
-                            //скрываем не нужные элементы
-                            for (var r = 0; r < targ.length; r++) {
-                                if (targ[r].className != pid) {
-                                    targ[r].style.display = "none";
-                                } else {
-                                    targ[r].style.display = "inline-block";
-                                }
-                            }
-                        }
-
-                        //отлавливаем клик по блоку с размерами
-                        function ClickSize() {
-                            var targ = document.getElementsByClassName('bx_size')[0];
-                            targ.onclick = function () {
-                                ShowHideAmount();
-                            }
-                        }
-
-                        $(document).ready(function () {
-                            ShowHideAmount();
-                            ClickSize();
-                        });
-                    </script>
-
-                    <!-- /How much products in the shop -->
 
                     <? if ($arParams["USE_RATING"] == "Y"): ?>
                         <div class="rating">
@@ -1020,12 +901,17 @@ $arViewedData = array(
                 <span><?= GetMessage("SIZES") ?></span>
             </li>
         <? endif; ?>
-
+        
         <? if ($arParams["PROPERTIES_DISPLAY_LOCATION"] == "TAB" && $showProps): ?>
             <li class="<?= (!($iTab++) ? ' current' : '') ?>">
                 <span><?= GetMessage("PROPERTIES_TAB") ?></span>
             </li>
         <? endif; ?>
+
+            <li class="<?= (!($iTab++) ? ' current' : '') ?>">
+                <span><?php echo GetMessage("QUANTITY_TAB_NAME"); ?></span>
+            </li>
+        
         <? if ($arVideo): ?>
             <li class="<?= (!($iTab++) ? ' current' : '') ?>">
                 <span><?= GetMessage("VIDEO_TAB") ?></span>
@@ -1671,6 +1557,147 @@ $arViewedData = array(
                 <? endif; ?>
             </li>
         <? endif; ?>
+
+            <li class="<?= (!($iTab++) ? ' current' : '') ?>">
+                <div class="availability-name margin-bottom">
+                    <?php echo ($arResult['NAME']); ?>,
+                    <span class="availability-offer-value"></span>
+                </div>
+
+                    <!-- How much products in the shop -->
+                    <?php
+                    //создаем класс со значениями остатка и наименования магазина
+                    class StoreProductSKU
+                    {
+                        public $skuid = "id";
+                        public $namestore = "namestore";
+                        public $amount = "amount";
+
+                        //формирование вывода остатка для всех магазинов для всех торговых предложений
+                        public function EchoAmount($id, $namestore, $amount)
+                        {
+                            $this->skuid = $id;
+                            $this->namestore = $namestore;
+                            $this->amount = $amount;
+                            ?>
+
+                            <?php foreach ($this->skuid as $key => $value) { ?>
+                                <div class="<?php echo $value ?>">
+                                    <?php
+                                    for ($r = 0; $r < count($this->namestore); $r++) { ?>
+                                        <?php $quantity = $this->amount[$key + ($r * count($this->skuid))] ?>
+                                        <?php if($quantity > 0){ ?> 
+                                            <p>
+                                                <?php echo $this->namestore[$r] ?>
+                                                - <?php echo $quantity; ?> <?= $strMeasure ?>
+                                            </p>
+                                        <?php } ?>
+                                    <?php } ?>
+                                </div>
+                                <?php
+                            }
+                        }
+                    }
+                    ?>
+
+                    <div class="quantity">
+                        <?php
+                        $select_fields = Array();
+
+                        //получаем id самого товара
+                        $pid = $arResult["ID"];
+
+                        //определяем есть ли у товара торговые предложения
+                        $sku = CCatalogSku::getExistOffers($pid);
+                        if ($sku[$pid]) {
+                            //если есть, определяем id торговых предложений
+                            $ressku = CCatalogSku::getOffersList($pid);
+                            $resskuid = $ressku[$pid];
+                            $skuid = array();
+                            foreach ($resskuid as $key => $value) {
+                                array_push($skuid, $value["ID"]);
+                            };
+
+                            //получаем массив с названиями складов-магазинов
+                            $filter = Array("ACTIVE" => "Y");
+                            $resStore = CCatalogStore::GetList(array(), $filter, false, false, $select_fields);
+                            while ($sklad = $resStore->Fetch()) {
+                                $stores[] = $sklad['TITLE'];
+                            }
+
+                            //получаем массив с остатком в каждом складе-магазине
+                            $arFilter = Array("PRODUCT_ID" => $skuid);
+                            $res = CCatalogStoreProduct::GetList(Array(), $arFilter, false, false, $select_fields);
+                            while ($arRes = $res->Fetch()) {
+                                $sum[] = $arRes['AMOUNT'];
+                            }
+
+                            //выводим магазины и остаток
+                            $echo = new StoreProductSKU();
+                            $echo->EchoAmount($skuid, $stores, $sum);
+
+                        } else {
+                            echo GetMessage("QUANTITY_NO_OFFERS_MESSAGE");
+                        }
+                        ?>
+                    </div>
+
+                    <script>
+                        //скрываем и отображаем количество товаров в магазине в зависимости от торгового предложения
+                        function ShowHideAmount() {
+                            //получаем id активного торгового предложения из url
+                            var params = window.location.search.replace('?', '')
+                                .split('&')
+                                .reduce(
+                                    function (p, e) {
+                                        var a = e.split('=');
+                                        p[decodeURIComponent(a[0])] = decodeURIComponent(a[1]);
+                                        return p;
+                                    },
+                                    {}
+                                );
+                            var pid = params['oid'];
+
+                            //определяем элементы с количеством товаров в зависимости от торгового предложения
+                            var par = document.getElementsByClassName('quantity')[0];
+                            var targ = par.getElementsByTagName('div');
+
+                            //скрываем не нужные элементы
+                            for (var r = 0; r < targ.length; r++) {
+                                if (targ[r].className != pid) {
+                                    targ[r].style.display = "none";
+                                } else {
+                                    targ[r].style.display = "inline-block";
+                                }
+                            }
+
+                            //Получаем название активного торгового предложения
+
+                            var offers = document.getElementsByClassName('bx_size')[0];
+                            var activeOffer = offers.getElementsByClassName('active')[0];
+                            var availabilityOffer = $('.availability-offer-value');
+                            availabilityOffer.html(activeOffer.getAttribute('title'));
+                            //console.log(availabilityOffer);
+                            //console.log(activeOffer.getAttribute('title'));
+                        }
+
+                        //отлавливаем клик по блоку с размерами
+                        function ClickSize() {
+                            var targ = document.getElementsByClassName('bx_size')[0];
+                            targ.onclick = function () {
+                                ShowHideAmount();
+                            }
+                        }
+
+                        $(document).ready(function () {
+                            ShowHideAmount();
+                            ClickSize();
+                        });
+                    </script>
+
+                    <!-- /How much products in the shop -->
+                    
+            </li>
 
         <? if ($arVideo): ?>
             <li class="<?= (!($iTab++) ? ' current' : '') ?>">

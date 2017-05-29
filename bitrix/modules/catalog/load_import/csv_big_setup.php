@@ -104,7 +104,7 @@ if (!empty($arSetupErrors))
         </tr>
         <tr>
             <td valign="top" width="40%">
-                <input type="submit" value="Сохранить">
+                <input type="submit" value="Загрузить файл">
             </td>
             <td valign="top" width="60%"></td>
         </tr>
@@ -117,69 +117,90 @@ if (!empty($arSetupErrors))
 </form>
 
 <?php
-
-$arIMP = [];
+$arIMP = []; //массив содержащий данные по торговым предложениям из преобразованного файла-импорта
 $fh = fopen($_SERVER['DOCUMENT_ROOT'] . $_POST["URL_DATA_FILE"], 'r');
 while (($info = fgetcsv($fh, 1000, "@")) !== false) {
-    //получаем преобразованный в массив csv-файл
+    //получаем файл-импорт преобразованный в $arIMP[]
     array_push($arIMP, explode(";", implode("", $info)));
 }
-//получаем массив со всеми существующими торговыми предложениями из БД
-$arSKU = [];
-$res1 = $DB->Query("SELECT * FROM b_iblock_element WHERE IBLOCK_ID=22");
-while ($result = $res1->Fetch()) {
-    array_push($arSKU, $result);
-}
 
-//при совпадении Артикул, Цвет, Размер, Склад надо сравнить Остаток, Цена и в случае расхождения - заменить
-//функция сравнения параметров (Артикул, Цвет, Размер, Склад) из файла и из БД, а также последующих действий
-function ComparisionParam($fromFile, $fromDB)
+//создаем класс для импорта
+class ImportLS
 {
-    $equality = 0;
-    if ($fromFile == $fromDB) {
-        $equality = $equality;
-    } elseif ($fromFile != $fromDB) {
-        $equality = $equality + 1;
+    public $article = null; //переменная с артикулом
+    public $color = null; //переменная с цветом
+    public $size = null; //переменная с размером
+    public $warehouse = null; //переменная с названием склада
+    public $number = null; //переменная с количеством на складе
+    public $cost = null; //переменная с ценой
+    public $idtp = null; //переменная с ID торгового предложения
+
+    //функция запроса в БД
+    function Query($qr, $sample, $samplekey=null) {
+        global $DB;
+        $arr = [];
+        $query = $qr;
+        $res = $DB->Query($query);
+        while ($result = $res->Fetch()) {
+            if ($samplekey == null) {
+                array_push($arr, $result[$sample]);
+            } else {
+                $arr[$result[$samplekey]] = $result[$sample];
+            }
+        }
+        //уничтожаем временные переменные
+        unset($query); unset($res); unset($result);
+        //возвращаем массив с массивом ID торговых предложений
+        return $arr;
     }
-    return $equality;
+
+    //функция получения из БД массивов с расшифровкой Размера и Цвета
+    function Deshifr($id) {
+        $qr = "SELECT ID, VALUE FROM b_iblock_property_enum WHERE PROPERTY_ID=$id";
+        $samplekey = "ID";
+        $sample = "VALUE";
+        $arDesh = $this->Query($qr,$sample, $samplekey);
+        return $arDesh;
+    }
+
+    //функция получения массива с ID торговых предложений по артикулу
+    function getArrID()
+    {
+        $xml_id = $this->article;
+        $sample = "IBLOCK_ELEMENT_ID";
+        $qr = "SELECT IBLOCK_ELEMENT_ID FROM b_iblock_element_property WHERE IBLOCK_PROPERTY_ID=130 AND VALUE='$xml_id'";
+        $arID = $this->Query($qr, $sample);
+        return $arID;
+    }
+
+    //функция получения значений Цвета и Размера у ID торговых предложений
+    function getSizeColor(){
+        //получаем из БД массив с расшифровкой Размера
+        $arSize = $this->Deshifr(128);
+        //получаем из БД массив с расшифровкой Цвета
+        //$arColor = $this->Deshifr()
+        return $arSize;
+    }
 }
 
-//функция сравнения значений (Остаток, Цена) из файла импорта и из БД, а так же последующих действий
-function ComparisionValue($fromFile, $fromDB)
-{
+$import = new ImportLS();
+foreach ($arIMP as $key => $value) {
+    if ($key == 0) continue;
+    if ($key == 2) break;
+    $import->article = $value[0];
+    $arID = $import->getArrID();
+    $arSize = $import->getSizeColor();
+    //var_dump($arID);
+    //var_dump($arSize);
 
 }
 
-//$arIMP[] - массив со всеми торговыми предложениями из файла
-//$arSKU[] - массив со всеми торговыми предложениями из БД
 
-//функция сравнения торговых предложений
-function ComparisionSKU()
-{
+CIBlockPriceTools::GetOffersArray ();
 
-}
+$fileclose = fclose($fh);
+?>
 
-$fileclose = fclose($fh); ?>
-<!-- блок тестирования полученных данных -->
-<table>
-    <tr>
-        <td>
-            <pre>
-                <?php
-                var_dump($arSKU);
-                ?>
-            </pre>
-        </td>
-        <td>
-            <pre>
-                <?php
-                var_dump($arIMP);
-                ?>
-            </pre>
-        </td>
-    </tr>
-</table>
-<!-- /блок тестирования полученных данных -->
 
 <script type="text/javascript">
     function showTranslitSettings() {
