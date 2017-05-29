@@ -136,7 +136,8 @@ class ImportLS
     public $idtp = null; //переменная с ID торгового предложения
 
     //функция запроса в БД
-    function Query($qr, $sample, $samplekey=null) {
+    function Query($qr, $sample, $samplekey = null)
+    {
         global $DB;
         $arr = [];
         $query = $qr;
@@ -149,18 +150,11 @@ class ImportLS
             }
         }
         //уничтожаем временные переменные
-        unset($query); unset($res); unset($result);
+        unset($query);
+        unset($res);
+        unset($result);
         //возвращаем массив с массивом ID торговых предложений
         return $arr;
-    }
-
-    //функция получения из БД массивов с расшифровкой Размера и Цвета
-    function Deshifr($id) {
-        $qr = "SELECT ID, VALUE FROM b_iblock_property_enum WHERE PROPERTY_ID=$id";
-        $samplekey = "ID";
-        $sample = "VALUE";
-        $arDesh = $this->Query($qr,$sample, $samplekey);
-        return $arDesh;
     }
 
     //функция получения массива с ID торговых предложений по артикулу
@@ -173,13 +167,39 @@ class ImportLS
         return $arID;
     }
 
-    //функция получения значений Цвета и Размера у ID торговых предложений
-    function getSizeColor(){
-        //получаем из БД массив с расшифровкой Размера
-        $arSize = $this->Deshifr(128);
-        //получаем из БД массив с расшифровкой Цвета
-        //$arColor = $this->Deshifr()
-        return $arSize;
+    //функция получения значений Размера у ID торговых предложений
+    function getSizeColor($idnumber)
+    {
+        //получаем массив с расшифровкой размера для торговых предложений ($arDesh[]; $key = шифр-ID; $item = значение размера)
+        $qr = "SELECT ID, VALUE FROM b_iblock_property_enum WHERE PROPERTY_ID=128";
+        $samplekey = "ID";
+        $sample = "VALUE";
+        $arDesh = $this->Query($qr, $sample, $samplekey);
+        unset($qr, $sample, $samplekey);
+
+        //получаем массив с зашифрованными значениями размера для каждого торгового предложения
+        $arrShifSize = [];
+        foreach ($idnumber as $key => $value) {
+            $qr = "SELECT VALUE FROM b_iblock_element_property WHERE IBLOCK_PROPERTY_ID=128 AND IBLOCK_ELEMENT_ID=$value";
+            $sample = "VALUE";
+            $arSize = $this->Query($qr, $sample);
+            for ($r=0;$r<count($arSize);$r++) {
+                $arrShifSize[$value] = $arSize[$r];
+            }
+        }
+
+        //преобразуем зашифрованные значения размера в нормальные
+        foreach ($arrShifSize as $key => $value) {
+            foreach ($arDesh as $id => $item) {
+                if ($id == $value) {
+                    $size = $item;
+                }
+            }
+            $arrShifSize[$key] = $size;
+        }
+
+        //возвращаем массив значений размеров для каджого торгового предложения ($key - ID торгового предложения; $item - нормальное значение размера)
+        return $arrShifSize;
     }
 }
 
@@ -189,14 +209,11 @@ foreach ($arIMP as $key => $value) {
     if ($key == 2) break;
     $import->article = $value[0];
     $arID = $import->getArrID();
-    $arSize = $import->getSizeColor();
-    //var_dump($arID);
-    //var_dump($arSize);
+    $arSize = $import->getSizeColor($arID);
+    var_dump($arID);
+    var_dump($arSize);
 
 }
-
-
-CIBlockPriceTools::GetOffersArray ();
 
 $fileclose = fclose($fh);
 ?>
