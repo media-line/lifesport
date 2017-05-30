@@ -131,11 +131,11 @@ class ImportLS
     public $color = null; //переменная с цветом
     public $size = null; //переменная с размером
     public $warehouse = null; //переменная с названием склада
-    public $number = null; //переменная с количеством на складе
+    public $amount = null; //переменная с количеством на складе
     public $cost = null; //переменная с ценой
     public $idtp = null; //переменная с ID торгового предложения
 
-    //функция запроса в БД
+    //метод запроса в БД
     function Query($qr, $sample, $samplekey = null)
     {
         global $DB;
@@ -157,7 +157,15 @@ class ImportLS
         return $arr;
     }
 
-    //функция получения массива с ID торговых предложений по артикулу
+    //метод импорта значения
+    function IMP($qr) {
+        global $DB;
+        $query = $qr;
+        $result = $DB->Query($query);
+        return $result;
+    }
+
+    //метод получения массива с ID торговых предложений по артикулу
     function getArrID()
     {
         $xml_id = $this->article;
@@ -167,7 +175,7 @@ class ImportLS
         return $arID;
     }
 
-    //функция получения значений Размера у ID торговых предложений
+    //метод получения значений Размера у ID торговых предложений
     function getSize($idnumber)
     {
         //получаем массив с расшифровкой размера для торговых предложений ($arDesh[]; $key = шифр-ID; $item = значение размера)
@@ -183,27 +191,28 @@ class ImportLS
             $qr = "SELECT VALUE FROM b_iblock_element_property WHERE IBLOCK_PROPERTY_ID=128 AND IBLOCK_ELEMENT_ID=$value";
             $sample = "VALUE";
             $arSize = $this->Query($qr, $sample);
-            for ($r=0;$r<count($arSize);$r++) {
+            for ($r = 0; $r < count($arSize); $r++) {
                 $arrShifSize[$value] = $arSize[$r];
             }
         }
 
         //преобразуем зашифрованные значения размера в нормальные
-        foreach ($arrShifSize as $key => $value) {
+        /*foreach ($arrShifSize as $key => $value) {
             foreach ($arDesh as $id => $item) {
                 if ($id == $value) {
                     $size = $item;
                 }
             }
             $arrShifSize[$key] = $size;
-        }
+        }*/
 
         //возвращаем массив значений размеров для каджого торгового предложения ($key - ID торгового предложения; $item - нормальное значение размера)
         return $arrShifSize;
     }
 
     //метод получения Цвета товара торговых предложений
-    function getColor ($id) {
+    function getColor($id)
+    {
         //проверяем является ли входящая переменная массивом и соответственно ведем себя
         if (is_array($id)) {
             $id = $id[0];
@@ -213,9 +222,8 @@ class ImportLS
         $IDColor = $mxResult["ID"];
         $IBLOCKColor = $mxResult["IBLOCK_ID"];
         //получаем цвет данного товара
-        $Color = CIBlockElement::GetProperty($IBLOCKColor, $IDColor, Array("sort"=>"asc"));
-        while ($ob = $Color->GetNext())
-        {
+        $Color = CIBlockElement::GetProperty($IBLOCKColor, $IDColor, Array("sort" => "asc"));
+        while ($ob = $Color->GetNext()) {
             $VALUES[] = $ob['VALUE'];
         }
         return $VALUES[22];
@@ -223,23 +231,101 @@ class ImportLS
     }
 }
 
-$import = new ImportLS();
 foreach ($arIMP as $key => $value) {
     if ($key == 0) continue;
-    if ($key == 2) break;
+    $import = new ImportLS();
     //определяем где в массиве из сайта будет артикул
     $import->article = $value[0];
-    //получаем массив ID торговых предложений по артикулу
+    //получаем массив ID торговых предложений по артикулу из БД
     $arID = $import->getArrID();
-    //получаем массив с Размером для каждого торгового предложения
+    //получаем массив с Размером для каждого торгового предложения из БД
     $arSize = $import->getSize($arID);
-    //получаем цвет товара к которому привязаны торговые предложения
+    //получаем цвет товара к которому привязаны торговые предложения из БД
     $arColor = $import->getColor($arID);
+    //создаем объекты и свойства для сравнения данных из файла импорта и данных полученных из БД
+    $export = new ImportLS();
+    $EColor = $export->color = $arColor;
+    $ESize = $export->size = $arSize;
 
-    ?><pre><?php
-    var_dump($arID);
-    var_dump($arSize);
-    var_dump($arColor);
+    $IColor = $import->color = $value[2];
+    $ISize = $import->size = $value[3];
+
+    //производим сравнение цвета и получаем значение ID торгового предложения для которого надо изменить цену и количество ($targetID)
+    $targetID = null;
+    if ($EColor == $IColor) {
+        foreach ($ESize as $key => $item) {
+            if ($item == $ISize) {
+                $targetID = $key;
+                break;
+            } else continue;
+        }
+    } else {
+        echo $key.". Совпадение цветов не найдено";
+    }
+    $import->idtp = $targetID;
+    var_dump($EColor);
+    echo "<br/>";
+    var_dump($IColor);
+    echo "<br/>";
+
+    //получаем массив соответствия id магазина и его названия
+    $qr = "SELECT ID, TITLE FROM b_catalog_store";
+    $simple = "ID";
+    $simplekey = "TITLE";
+    $arStore = $export->Query($qr, $simple, $simplekey);
+    unset($qr, $sample, $samplekey);
+
+    //заменяем в объекте название магазина на его id
+    //получаем название
+    $IStore = $value[4];
+    //проходим по массиву соответствия id и названия магазина и получаем его id
+    foreach ($arStore as $key=>$item) {
+        if ($key==$IStore) {
+            $IStore = $item;
+            break;
+        } else {
+            $IStore = "Нужный магазин не найден. Необходимо его создать.";
+        };
+    }
+    //заменяем в объекте название на id
+    $import->warehouse = $IStore;
+
+    //импортируем количество товара в магазине
+    $import->amount = $value[5];
+    //TODO: перед испортом необходимо сделать проверку на наличие строк в таблице. и если строк нет - до не UPDATE, а INSERT
+    //проверяем наличие строк в таблице
+    $qr = "SELECT * FROM b_catalog_store_product WHERE STORE_ID=$import->warehouse AND PRODUCT_ID=$import->idtp";
+    $sample = "AMOUNT";
+    $check = $import->Query($qr, $sample);
+    if (count($check) == 0) {
+        //TODO: добавление записи с количеством товара в магазине
+        $qrv = "INSERT INTO b_catalog_store_product (PRODUCT_ID, AMOUNT, STORE_ID) VALUES ($import->idtp, $import->amount, $import->warehouse)";
+        $import->IMP($qrv);
+    } else {
+        $qr = "UPDATE b_catalog_store_product SET AMOUNT=$import->amount WHERE STORE_ID=$import->warehouse AND PRODUCT_ID=$import->idtp";
+        $import->IMP($qr);
+        unset($qr);
+    };
+    var_dump($check);
+    unset($qr, $check, $qrv);
+
+    //импортируем цену торгового предложения
+    //TODO: перед испортом необходимо сделать проверку на наличие строк в таблице. и если строк нет - до не UPDATE, а INSERT
+    $import->cost = $value[6];
+    $qr = "UPDATE b_catalog_price SET PRICE_SCALE=$import->cost WHERE PRODUCT_ID=$import->idtp";
+    //$import->IMP($qr);
+    //unset($qr);
+
+    ?>
+    <pre><?php
+    //var_dump($arIMP);
+    //var_dump($arID);
+    //var_dump($arSize);
+    //var_dump($arColor);
+    //var_dump($import);
+    //var_dump($arSize);
+    //var_dump($arStore);
+    //var_dump($IStore);
     ?></pre><?php
 
 }
