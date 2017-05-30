@@ -168,7 +168,7 @@ class ImportLS
     }
 
     //функция получения значений Размера у ID торговых предложений
-    function getSizeColor($idnumber)
+    function getSize($idnumber)
     {
         //получаем массив с расшифровкой размера для торговых предложений ($arDesh[]; $key = шифр-ID; $item = значение размера)
         $qr = "SELECT ID, VALUE FROM b_iblock_property_enum WHERE PROPERTY_ID=128";
@@ -201,17 +201,46 @@ class ImportLS
         //возвращаем массив значений размеров для каджого торгового предложения ($key - ID торгового предложения; $item - нормальное значение размера)
         return $arrShifSize;
     }
+
+    //метод получения Цвета товара торговых предложений
+    function getColor ($id) {
+        //проверяем является ли входящая переменная массивом и соответственно ведем себя
+        if (is_array($id)) {
+            $id = $id[0];
+        }
+        //получаем ID товара внутренним методом Битрикса
+        $mxResult = CCatalogSku::GetProductInfo($id);
+        $IDColor = $mxResult["ID"];
+        $IBLOCKColor = $mxResult["IBLOCK_ID"];
+        //получаем цвет данного товара
+        $Color = CIBlockElement::GetProperty($IBLOCKColor, $IDColor, Array("sort"=>"asc"));
+        while ($ob = $Color->GetNext())
+        {
+            $VALUES[] = $ob['VALUE'];
+        }
+        return $VALUES[22];
+
+    }
 }
 
 $import = new ImportLS();
 foreach ($arIMP as $key => $value) {
     if ($key == 0) continue;
     if ($key == 2) break;
+    //определяем где в массиве из сайта будет артикул
     $import->article = $value[0];
+    //получаем массив ID торговых предложений по артикулу
     $arID = $import->getArrID();
-    $arSize = $import->getSizeColor($arID);
+    //получаем массив с Размером для каждого торгового предложения
+    $arSize = $import->getSize($arID);
+    //получаем цвет товара к которому привязаны торговые предложения
+    $arColor = $import->getColor($arID);
+
+    ?><pre><?php
     var_dump($arID);
     var_dump($arSize);
+    var_dump($arColor);
+    ?></pre><?php
 
 }
 
