@@ -175,7 +175,9 @@ class ImportLS
         return $arID;
     }
 
-    //метод получения значений Размера у ID торговых предложений
+    //метод получения Размера торговых предложений
+    //на входе $idnumber - массив id торговых предложений
+    //на выходе $arrShifSize[] - $key - id торгового предложения; $value - значение Размера для этого id
     function getSize($idnumber)
     {
         //получаем массив с расшифровкой размера для торговых предложений ($arDesh[]; $key = шифр-ID; $item = значение размера)
@@ -197,37 +199,35 @@ class ImportLS
         }
 
         //преобразуем зашифрованные значения размера в нормальные
-        /*foreach ($arrShifSize as $key => $value) {
+        foreach ($arrShifSize as $key => $value) {
             foreach ($arDesh as $id => $item) {
                 if ($id == $value) {
                     $size = $item;
                 }
             }
             $arrShifSize[$key] = $size;
-        }*/
+        }
 
         //возвращаем массив значений размеров для каджого торгового предложения ($key - ID торгового предложения; $item - нормальное значение размера)
         return $arrShifSize;
     }
 
     //метод получения Цвета товара торговых предложений
-    function getColor($id)
+    //на входе $arSize[] - $key - id торгового предложения; $value - значение Размера для этого id
+    //на выходе $arColor[] - $key - id торгового предложения; $value - значение Цвета для этого id
+    function getColor($arSize)
     {
-        //проверяем является ли входящая переменная массивом и соответственно ведем себя
-        if (is_array($id)) {
-            $id = $id[0];
+        $arColor = [];
+        foreach ($arSize as $key=>$value) {
+            $qr = "SELECT VALUE FROM b_iblock_element_property WHERE IBLOCK_PROPERTY_ID=129 AND IBLOCK_ELEMENT_ID=$key";
+            $sample = "VALUE";
+            $color[$key] = $this->Query($qr, $sample);
+            unset($qr, $sample);
+            foreach ($color as $key=>$value) {
+                $arColor[$key] = $value[count($value)-1];
+            }
         }
-        //получаем ID товара внутренним методом Битрикса
-        $mxResult = CCatalogSku::GetProductInfo($id);
-        $IDColor = $mxResult["ID"];
-        $IBLOCKColor = $mxResult["IBLOCK_ID"];
-        //получаем цвет данного товара
-        $Color = CIBlockElement::GetProperty($IBLOCKColor, $IDColor, Array("sort" => "asc"));
-        while ($ob = $Color->GetNext()) {
-            $VALUES[] = $ob['VALUE'];
-        }
-        return $VALUES[22];
-
+        return $arColor;
     }
 }
 
@@ -240,8 +240,12 @@ foreach ($arIMP as $key => $value) {
     $arID = $import->getArrID();
     //получаем массив с Размером для каждого торгового предложения из БД
     $arSize = $import->getSize($arID);
+    //получаем массив с Цветом для каждого торгового предложения из БД
+    $arColor = $import->getColor($arSize);
+
+
     //получаем цвет товара к которому привязаны торговые предложения из БД
-    $arColor = $import->getColor($arID);
+    /*$arColor = $import->getColor($arID);
     //создаем объекты и свойства для сравнения данных из файла импорта и данных полученных из БД
     $export = new ImportLS();
     $EColor = $export->color = $arColor;
@@ -262,18 +266,20 @@ foreach ($arIMP as $key => $value) {
             }
         } else {
             echo $number.". Совпадение цветов не найдено";
-            //TODO: добавить нужный цвет в справочник
-            //TODO: рекурсивно запустить функцию ColorCompare
+            //TODO: добавляем новый цвет в справочник
+            $qr = "INSERT INTO b_iblock_property_enum (PROPERTY_ID, VALUE) VALUES (128, $IColor)";
+            global $DB;
+            $DB->Query($qr);
+            unset($qr);
+
+
+            //TODO: рекурсивно запускаем функцию ColorCompare
         }
     }
 
     $targetID = ColorCompare($EColor, $IColor, $ESize, $ISize, $key);
 
     $import->idtp = $targetID;
-    var_dump($EColor);
-    echo "<br/>";
-    var_dump($IColor);
-    echo "<br/>";
 
     //получаем массив соответствия id магазина и его названия
     $qr = "SELECT ID, TITLE FROM b_catalog_store";
@@ -317,11 +323,11 @@ foreach ($arIMP as $key => $value) {
     unset($qr, $check, $qrv);
 
     //импортируем цену торгового предложения
-    //TODO: перед испортом необходимо сделать проверку на наличие строк в таблице. и если строк нет - до не UPDATE, а INSERT
+    //TODO: перед имортом необходимо сделать проверку на наличие строк в таблице. и если строк нет - до не UPDATE, а INSERT
     $import->cost = $value[6];
     $qr = "UPDATE b_catalog_price SET PRICE_SCALE=$import->cost WHERE PRODUCT_ID=$import->idtp";
     //$import->IMP($qr);
-    //unset($qr);
+    //unset($qr);*/
 
     ?>
     <pre><?php
