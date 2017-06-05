@@ -252,16 +252,23 @@ foreach ($arIMP as $key => $value) {
 
     //производим сравнение цвета и получаем значение ID торгового предложения для которого надо изменить цену и количество ($targetID)
     $targetID = null;
-    if ($EColor == $IColor) {
-        foreach ($ESize as $key => $item) {
-            if ($item == $ISize) {
-                $targetID = $key;
-                break;
-            } else continue;
+    function ColorCompare ($EColor, $IColor, $ESize, $ISize, $number) {
+        if ($EColor == $IColor) {
+            foreach ($ESize as $key => $item) {
+                if ($item == $ISize) {
+                    $targetID = $key;
+                    return $targetID;
+                } else continue;
+            }
+        } else {
+            echo $number.". Совпадение цветов не найдено";
+            //TODO: добавить нужный цвет в справочник
+            //TODO: рекурсивно запустить функцию ColorCompare
         }
-    } else {
-        echo $key.". Совпадение цветов не найдено";
     }
+
+    $targetID = ColorCompare($EColor, $IColor, $ESize, $ISize, $key);
+
     $import->idtp = $targetID;
     var_dump($EColor);
     echo "<br/>";

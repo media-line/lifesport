@@ -80,10 +80,31 @@ $templateData = array(
 );
 unset($currencyList, $templateLibrary);
 
+
+// заменяем картинки цветов на соотв. картинки из предложений
+foreach ($arResult['SKU_PROPS']['COLOR_REF']['VALUES'] as &$colorValue) {
+    foreach ($arResult['OFFERS'] as $offer) {
+        if($colorValue['XML_ID'] == $offer['PROPERTIES']['COLOR_REF']['VALUE']) {
+            if(isset($offer['DETAIL_PICTURE']['ID'])) {
+                $img_ = CFile::ResizeImageGet($offer['DETAIL_PICTURE']['ID'], array( "width" => 100, "height" => 100 ), BX_RESIZE_IMAGE_EXACT, true );
+                $colorValue['PICT']['SRC'] = $img_['src'];
+                $colorValue['PICT']['WIDTH'] = $img_['width'];
+                $colorValue['PICT']['HEIGHT'] = $img_['height'];
+            }
+        }
+    }
+}
+
+
 $arSkuTemplate = array();
 if (!empty($arResult['SKU_PROPS'])) {
     $arSkuTemplate = CMShop::GetSKUPropsArray($arResult['SKU_PROPS'], $arResult["SKU_IBLOCK_ID"], "list", $arParams["OFFER_HIDE_NAME_PROPS"]);
 }
+
+//        echo '<pre>';print_r($arResult['SKU_PROPS']['COLOR_REF']['VALUES']);echo '</pre>';//die;
+//echo '<pre>';print_r($arResult['OFFERS'][0]['PROPERTIES']['COLOR_REF']['VALUE']);echo '</pre>';//die;
+
+
 $strMainID = $this->GetEditAreaId($arResult['ID']);
 
 $strObName = 'ob' . preg_replace("/[^a-zA-Z0-9_]/", "x", $strMainID);
@@ -154,14 +175,17 @@ $arViewedData = array(
             <div class="slides">
                 <? if ($showCustomOffer && !empty($arResult['OFFERS_PROP'])) { ?>
                     <div class="offers_img wof">
+
                         <?
                         $alt = $arFirstPhoto["ALT"];
                         $title = $arFirstPhoto["TITLE"];
                         ?>
                         <? if ($arFirstPhoto["BIG"]["src"]) { ?>
+                            <? $img_ = CFile::ResizeImageGet($arFirstPhoto["ID"], array( "width" => 320, "height" => 320 ), BX_RESIZE_IMAGE_EXACT, true );?>
                             <a href="<?= $arFirstPhoto["BIG"]["src"] ?>" class="fancy_offer" title="<?= $title; ?>">
                                 <img id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PICT']; ?>"
-                                     src="<?= $arFirstPhoto['SMALL']['src']; ?>" alt="<?= $alt; ?>"
+                                     <?/*src="<?= $arFirstPhoto['SMALL']['src']; ?>" alt="<?= $alt; ?>"*/?>
+                                     src="<?= $img_['src']; ?>" alt="<?= $alt; ?>"
                                      title="<?= $title; ?>" itemprop="image">
                             </a>
                         <? } else { ?>
@@ -223,12 +247,14 @@ $arViewedData = array(
                     </div>
                 <? endif; ?>
             <? } else { ?>
+                <?/*
                 <div class="wrapp_thumbs">
                     <div class="sliders">
                         <div class="thumbs" style="">
                         </div>
                     </div>
                 </div>
+                */?>
             <? } ?>
         </div>
         <? /*mobile*/ ?>
@@ -550,7 +576,6 @@ $arViewedData = array(
                         </div>
                     <? } ?>
 
-
                     <? if ($arParams["USE_RATING"] == "Y"): ?>
                         <div class="rating">
                             <? $APPLICATION->IncludeComponent(
@@ -575,6 +600,8 @@ $arViewedData = array(
                     <? if ($arResult["OFFERS"] && $showCustomOffer) { ?>
                         <div class="sku_props">
                             <? if (!empty($arResult['OFFERS_PROP'])) { ?>
+                                <? ///echo '<pre>';print_r($arSkuTemplate);echo '</pre>';die;
+                                ?>
                                 <div class="bx_catalog_item_scu wrapper_sku"
                                      id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PROP_DIV']; ?>">
                                     <? foreach ($arSkuTemplate as $code => $strTemplate) {
@@ -901,17 +928,17 @@ $arViewedData = array(
                 <span><?= GetMessage("SIZES") ?></span>
             </li>
         <? endif; ?>
-        
+
         <? if ($arParams["PROPERTIES_DISPLAY_LOCATION"] == "TAB" && $showProps): ?>
             <li class="<?= (!($iTab++) ? ' current' : '') ?>">
                 <span><?= GetMessage("PROPERTIES_TAB") ?></span>
             </li>
         <? endif; ?>
 
-            <li class="<?= (!($iTab++) ? ' current' : '') ?>">
-                <span><?php echo GetMessage("QUANTITY_TAB_NAME"); ?></span>
-            </li>
-        
+        <li class="<?= (!($iTab++) ? ' current' : '') ?>">
+            <span><?php /*echo GetMessage("QUANTITY_TAB_NAME"); */?> Наличие </span>
+        </li>
+
         <? if ($arVideo): ?>
             <li class="<?= (!($iTab++) ? ' current' : '') ?>">
                 <span><?= GetMessage("VIDEO_TAB") ?></span>
@@ -1558,146 +1585,146 @@ $arViewedData = array(
             </li>
         <? endif; ?>
 
-            <li class="<?= (!($iTab++) ? ' current' : '') ?>">
-                <div class="availability-name margin-bottom">
-                    <?php echo ($arResult['NAME']); ?>,
-                    <span class="availability-offer-value"></span>
-                </div>
+        <li class="<?= (!($iTab++) ? ' current' : '') ?>">
+            <div class="availability-name margin-bottom">
+                <?php echo ($arResult['NAME']); ?>,
+                <span class="availability-offer-value"></span>
+            </div>
 
-                    <!-- How much products in the shop -->
-                    <?php
-                    //создаем класс со значениями остатка и наименования магазина
-                    class StoreProductSKU
-                    {
-                        public $skuid = "id";
-                        public $namestore = "namestore";
-                        public $amount = "amount";
+            <!-- How much products in the shop -->
+            <?php
+            //создаем класс со значениями остатка и наименования магазина
+            class StoreProductSKU
+            {
+                public $skuid = "id";
+                public $namestore = "namestore";
+                public $amount = "amount";
 
-                        //формирование вывода остатка для всех магазинов для всех торговых предложений
-                        public function EchoAmount($id, $namestore, $amount)
-                        {
-                            $this->skuid = $id;
-                            $this->namestore = $namestore;
-                            $this->amount = $amount;
-                            ?>
-
-                            <?php foreach ($this->skuid as $key => $value) { ?>
-                                <div class="<?php echo $value ?>">
-                                    <?php
-                                    for ($r = 0; $r < count($this->namestore); $r++) { ?>
-                                        <?php $quantity = $this->amount[$key + ($r * count($this->skuid))] ?>
-                                        <?php if($quantity > 0){ ?> 
-                                            <p>
-                                                <?php echo $this->namestore[$r] ?>
-                                                - <?php echo $quantity; ?> <?= $strMeasure ?>
-                                            </p>
-                                        <?php } ?>
-                                    <?php } ?>
-                                </div>
-                                <?php
-                            }
-                        }
-                    }
+                //формирование вывода остатка для всех магазинов для всех торговых предложений
+                public function EchoAmount($id, $namestore, $amount)
+                {
+                    $this->skuid = $id;
+                    $this->namestore = $namestore;
+                    $this->amount = $amount;
                     ?>
 
-                    <div class="quantity">
+                    <?php foreach ($this->skuid as $key => $value) { ?>
+                    <div class="<?php echo $value ?>">
                         <?php
-                        $select_fields = Array();
-
-                        //получаем id самого товара
-                        $pid = $arResult["ID"];
-
-                        //определяем есть ли у товара торговые предложения
-                        $sku = CCatalogSku::getExistOffers($pid);
-                        if ($sku[$pid]) {
-                            //если есть, определяем id торговых предложений
-                            $ressku = CCatalogSku::getOffersList($pid);
-                            $resskuid = $ressku[$pid];
-                            $skuid = array();
-                            foreach ($resskuid as $key => $value) {
-                                array_push($skuid, $value["ID"]);
-                            };
-
-                            //получаем массив с названиями складов-магазинов
-                            $filter = Array("ACTIVE" => "Y");
-                            $resStore = CCatalogStore::GetList(array(), $filter, false, false, $select_fields);
-                            while ($sklad = $resStore->Fetch()) {
-                                $stores[] = $sklad['TITLE'];
-                            }
-
-                            //получаем массив с остатком в каждом складе-магазине
-                            $arFilter = Array("PRODUCT_ID" => $skuid);
-                            $res = CCatalogStoreProduct::GetList(Array(), $arFilter, false, false, $select_fields);
-                            while ($arRes = $res->Fetch()) {
-                                $sum[] = $arRes['AMOUNT'];
-                            }
-
-                            //выводим магазины и остаток
-                            $echo = new StoreProductSKU();
-                            $echo->EchoAmount($skuid, $stores, $sum);
-
-                        } else {
-                            echo GetMessage("QUANTITY_NO_OFFERS_MESSAGE");
-                        }
-                        ?>
+                        for ($r = 0; $r < count($this->namestore); $r++) { ?>
+                            <?php $quantity = $this->amount[$key + ($r * count($this->skuid))] ?>
+                            <?php if($quantity > 0){ ?>
+                                <p>
+                                    <?php echo $this->namestore[$r] ?>
+                                    - <?php echo $quantity; ?> <?= $strMeasure ?>
+                                </p>
+                            <?php } ?>
+                        <?php } ?>
                     </div>
+                    <?php
+                }
+                }
+            }
+            ?>
 
-                    <script>
-                        //скрываем и отображаем количество товаров в магазине в зависимости от торгового предложения
-                        function ShowHideAmount() {
-                            //получаем id активного торгового предложения из url
-                            var params = window.location.search.replace('?', '')
-                                .split('&')
-                                .reduce(
-                                    function (p, e) {
-                                        var a = e.split('=');
-                                        p[decodeURIComponent(a[0])] = decodeURIComponent(a[1]);
-                                        return p;
-                                    },
-                                    {}
-                                );
-                            var pid = params['oid'];
+            <div class="quantity">
+                <?php
+                $select_fields = Array();
 
-                            //определяем элементы с количеством товаров в зависимости от торгового предложения
-                            var par = document.getElementsByClassName('quantity')[0];
-                            var targ = par.getElementsByTagName('div');
+                //получаем id самого товара
+                $pid = $arResult["ID"];
 
-                            //скрываем не нужные элементы
-                            for (var r = 0; r < targ.length; r++) {
-                                if (targ[r].className != pid) {
-                                    targ[r].style.display = "none";
-                                } else {
-                                    targ[r].style.display = "inline-block";
-                                }
-                            }
+                //определяем есть ли у товара торговые предложения
+                $sku = CCatalogSku::getExistOffers($pid);
+                if ($sku[$pid]) {
+                    //если есть, определяем id торговых предложений
+                    $ressku = CCatalogSku::getOffersList($pid);
+                    $resskuid = $ressku[$pid];
+                    $skuid = array();
+                    foreach ($resskuid as $key => $value) {
+                        array_push($skuid, $value["ID"]);
+                    };
 
-                            //Получаем название активного торгового предложения
+                    //получаем массив с названиями складов-магазинов
+                    $filter = Array("ACTIVE" => "Y");
+                    $resStore = CCatalogStore::GetList(array(), $filter, false, false, $select_fields);
+                    while ($sklad = $resStore->Fetch()) {
+                        $stores[] = $sklad['TITLE'];
+                    }
 
-                            var offers = document.getElementsByClassName('bx_size')[0];
-                            var activeOffer = offers.getElementsByClassName('active')[0];
-                            var availabilityOffer = $('.availability-offer-value');
-                            availabilityOffer.html(activeOffer.getAttribute('title'));
-                            //console.log(availabilityOffer);
-                            //console.log(activeOffer.getAttribute('title'));
+                    //получаем массив с остатком в каждом складе-магазине
+                    $arFilter = Array("PRODUCT_ID" => $skuid);
+                    $res = CCatalogStoreProduct::GetList(Array(), $arFilter, false, false, $select_fields);
+                    while ($arRes = $res->Fetch()) {
+                        $sum[] = $arRes['AMOUNT'];
+                    }
+
+                    //выводим магазины и остаток
+                    $echo = new StoreProductSKU();
+                    $echo->EchoAmount($skuid, $stores, $sum);
+
+                } else {
+                    echo GetMessage("QUANTITY_NO_OFFERS_MESSAGE");
+                }
+                ?>
+            </div>
+
+            <script>
+                //скрываем и отображаем количество товаров в магазине в зависимости от торгового предложения
+                function ShowHideAmount() {
+                    //получаем id активного торгового предложения из url
+                    var params = window.location.search.replace('?', '')
+                        .split('&')
+                        .reduce(
+                            function (p, e) {
+                                var a = e.split('=');
+                                p[decodeURIComponent(a[0])] = decodeURIComponent(a[1]);
+                                return p;
+                            },
+                            {}
+                        );
+                    var pid = params['oid'];
+
+                    //определяем элементы с количеством товаров в зависимости от торгового предложения
+                    var par = document.getElementsByClassName('quantity')[0];
+                    var targ = par.getElementsByTagName('div');
+
+                    //скрываем не нужные элементы
+                    for (var r = 0; r < targ.length; r++) {
+                        if (targ[r].className != pid) {
+                            targ[r].style.display = "none";
+                        } else {
+                            targ[r].style.display = "inline-block";
                         }
+                    }
 
-                        //отлавливаем клик по блоку с размерами
-                        function ClickSize() {
-                            var targ = document.getElementsByClassName('bx_size')[0];
-                            targ.onclick = function () {
-                                ShowHideAmount();
-                            }
-                        }
+                    //Получаем название активного торгового предложения
 
-                        $(document).ready(function () {
-                            ShowHideAmount();
-                            ClickSize();
-                        });
-                    </script>
+                    var offers = document.getElementsByClassName('bx_size')[0];
+                    var activeOffer = offers.getElementsByClassName('active')[0];
+                    var availabilityOffer = $('.availability-offer-value');
+                    availabilityOffer.html(activeOffer.getAttribute('title'));
+                    //console.log(availabilityOffer);
+                    //console.log(activeOffer.getAttribute('title'));
+                }
 
-                    <!-- /How much products in the shop -->
-                    
-            </li>
+                //отлавливаем клик по блоку с размерами
+                function ClickSize() {
+                    var targ = document.getElementsByClassName('bx_size')[0];
+                    targ.onclick = function () {
+                        ShowHideAmount();
+                    }
+                }
+
+                $(document).ready(function () {
+                    ShowHideAmount();
+                    ClickSize();
+                });
+            </script>
+
+            <!-- /How much products in the shop -->
+
+        </li>
 
         <? if ($arVideo): ?>
             <li class="<?= (!($iTab++) ? ' current' : '') ?>">
