@@ -28,6 +28,7 @@ class ExportOffer implements \Iterator
 	/** @var null|\CIBlockResult $dbItems */
 	protected $dbItems = NULL;
 	protected $catalogType;
+	protected $onlyAvailableElements = false;	// export with flag "available"
 
 	public function __construct($catalogType, $params)
 	{
@@ -114,9 +115,9 @@ class ExportOffer implements \Iterator
 		$order = array("ID" => "ASC");
 		$arSelect = array("ID", "LID", "IBLOCK_ID", "IBLOCK_SECTION_ID", "NAME", "PREVIEW_PICTURE", "PREVIEW_TEXT",
 			"PREVIEW_TEXT_TYPE", "DETAIL_PICTURE", "LANG_DIR", "DETAIL_PAGE_URL", "DETAIL_TEXT");
-
+		
 		$filter = array("IBLOCK_ID" => $this->iBlockId);
-
+		
 //		if set start position - limit result by ID
 		if($this->startPosition)
 			$filter[">=ID"] = $this->startPosition;
@@ -126,7 +127,9 @@ class ExportOffer implements \Iterator
 			$filter["INCLUDE_SUBSECTIONS"] = "Y";
 			$filter["SECTION_ID"] = $this->arSections;
 		}
-
+		
+		if($this->onlyAvailableElements)
+			$filter["CATALOG_AVAILABLE"] = "Y";
 		$filter["ACTIVE"] = "Y";
 		$filter["SECTION_GLOBAL_ACTIVE"] = "Y";
 		$filter["ACTIVE_DATE"] = "Y";
@@ -296,6 +299,19 @@ class ExportOffer implements \Iterator
 		$currencyList = Currency\CurrencyManager::getCurrencyList();
 
 		return (isset($currencyList['RUR']) ? 'RUR' : 'RUB');
+	}
+	
+	/**
+	 * Change setting "export only available elements".
+	 *
+	 * @param bool $flag
+	 */
+	public function setOnlyAvailableFlag($flag)
+	{
+		if($flag)
+			$this->onlyAvailableElements = true;
+		else
+			$this->onlyAvailableElements = false;
 	}
 
 	protected function getPrices($productId, $siteId)

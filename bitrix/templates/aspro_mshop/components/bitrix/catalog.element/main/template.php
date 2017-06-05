@@ -176,8 +176,14 @@ setViewedProduct(<?=$arResult['ID']?>, <?=CUtil::PhpToJSObject($arViewedData, fa
 								?>
 								<li id="photo-<?=$i?>" <?=(!$i ? 'class="current"' : 'style="display: none;"')?>>
 									<?if(!$isEmpty){?>
+										<?
+//										        echo '<pre>';print_r($arImage);echo '</pre>';die;
+										$img_ = CFile::ResizeImageGet($arImage["ID"], array( "width" => 320, "height" => 320 ), BX_RESIZE_IMAGE_EXACT, true );
+
+										?>
 										<a href="<?=$arImage["BIG"]["src"]?>" <?=($bIsOneImage ? '' : 'data-fancybox-group="item_slider"')?> class="fancy" title="<?=$title;?>">
-											<img src="<?=$arImage["SMALL"]["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>"<?=(!$i ? ' itemprop="image"' : '')?> />
+											<?/*<img src="<?=$arImage["SMALL"]["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>"<?=(!$i ? ' itemprop="image"' : '')?> />*/?>
+											<img src="<?=$img_["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>"<?=(!$i ? ' itemprop="image"' : '')?> />
 										</a>
 									<?}else{?>
 										<img src="<?=$arImage["SRC"]?>" alt="<?=$alt;?>" title="<?=$title;?>" />

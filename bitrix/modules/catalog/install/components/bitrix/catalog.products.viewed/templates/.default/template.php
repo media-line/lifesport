@@ -75,9 +75,9 @@ $generalParams = array(
 	'PRODUCT_DISPLAY_MODE' => $arParams['PRODUCT_DISPLAY_MODE'],
 	'SHOW_MAX_QUANTITY' => $arParams['SHOW_MAX_QUANTITY'],
 	'RELATIVE_QUANTITY_FACTOR' => $arParams['RELATIVE_QUANTITY_FACTOR'],
-	'MESS_SHOW_MAX_QUANTITY' => $arParams['MESS_SHOW_MAX_QUANTITY'],
-	'MESS_RELATIVE_QUANTITY_MANY' => $arParams['MESS_RELATIVE_QUANTITY_MANY'],
-	'MESS_RELATIVE_QUANTITY_FEW' => $arParams['MESS_RELATIVE_QUANTITY_FEW'],
+	'MESS_SHOW_MAX_QUANTITY' => $arParams['~MESS_SHOW_MAX_QUANTITY'],
+	'MESS_RELATIVE_QUANTITY_MANY' => $arParams['~MESS_RELATIVE_QUANTITY_MANY'],
+	'MESS_RELATIVE_QUANTITY_FEW' => $arParams['~MESS_RELATIVE_QUANTITY_FEW'],
 	'SHOW_OLD_PRICE' => $arParams['SHOW_OLD_PRICE'],
 	'USE_PRODUCT_QUANTITY' => $arParams['USE_PRODUCT_QUANTITY'],
 	'PRODUCT_QUANTITY_VARIABLE' => $arParams['PRODUCT_QUANTITY_VARIABLE'],
@@ -101,16 +101,19 @@ $generalParams = array(
 	'TEMPLATE_THEME' => $arParams['TEMPLATE_THEME'],
 	'USE_ENHANCED_ECOMMERCE' => $arParams['USE_ENHANCED_ECOMMERCE'],
 	'DATA_LAYER_NAME' => $arParams['DATA_LAYER_NAME'],
-	'MESS_BTN_BUY' => $arParams['MESS_BTN_BUY'],
-	'MESS_BTN_DETAIL' => $arParams['MESS_BTN_DETAIL'],
-	'MESS_BTN_COMPARE' => $arParams['MESS_BTN_COMPARE'],
-	'MESS_BTN_SUBSCRIBE' => $arParams['MESS_BTN_SUBSCRIBE'],
-	'MESS_BTN_ADD_TO_BASKET' => $arParams['MESS_BTN_ADD_TO_BASKET'],
-	'MESS_NOT_AVAILABLE' => $arParams['MESS_NOT_AVAILABLE']
+	'MESS_BTN_BUY' => $arParams['~MESS_BTN_BUY'],
+	'MESS_BTN_DETAIL' => $arParams['~MESS_BTN_DETAIL'],
+	'MESS_BTN_COMPARE' => $arParams['~MESS_BTN_COMPARE'],
+	'MESS_BTN_SUBSCRIBE' => $arParams['~MESS_BTN_SUBSCRIBE'],
+	'MESS_BTN_ADD_TO_BASKET' => $arParams['~MESS_BTN_ADD_TO_BASKET'],
+	'MESS_NOT_AVAILABLE' => $arParams['~MESS_NOT_AVAILABLE']
 );
+
+$obName = 'ob'.preg_replace('/[^a-zA-Z0-9_]/', 'x', $this->GetEditAreaId($this->randString()));
+$containerName = 'catalog-products-viewed-container';
 ?>
 
-<div class="catalog-products-viewed bx-<?=$arParams['TEMPLATE_THEME']?>" data-entity="container">
+<div class="catalog-products-viewed bx-<?=$arParams['TEMPLATE_THEME']?>" data-entity="<?=$containerName?>">
 	<?
 	if (!empty($arResult['ITEMS']) && !empty($arResult['ITEM_ROWS']))
 	{
@@ -695,5 +698,9 @@ $generalParams = array(
 		BTN_MESSAGE_LAZY_LOAD: '<?=$arParams['MESS_BTN_LAZY_LOAD']?>',
 		BTN_MESSAGE_LAZY_LOAD_WAITER: '<?=GetMessageJS('CT_CPV_CATALOG_BTN_MESSAGE_LAZY_LOAD_WAITER')?>',
 		SITE_ID: '<?=SITE_ID?>'
+	});
+	var <?=$obName?> = new JCCatalogProductsViewedComponent({
+		initiallyShowHeader: '<?=!empty($arResult['ITEM_ROWS'])?>',
+		container: '<?=$containerName?>'
 	});
 </script>

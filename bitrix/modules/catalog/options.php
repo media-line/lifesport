@@ -311,7 +311,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($_POST['Update']) && !$bReadO
 		$strEnableReservation = 'Y';
 	else
 		$strEnableReservation = (isset($_POST['enable_reservation']) && (string)$_POST['enable_reservation'] === 'Y' ? 'Y' : 'N');
+
 	Option::set('catalog', 'enable_reservation', $strEnableReservation, '');
+
+	CAgent::RemoveAgent('CSaleOrder::ClearProductReservedQuantity();', 'sale');
+	if ($saleIsInstalled && $strEnableReservation == 'Y')
+	{
+		CAgent::AddAgent("CSaleOrder::ClearProductReservedQuantity();", "sale", "N", 86400, "", "Y");
+	}
 
 	if (!$useSaleDiscountOnly)
 	{

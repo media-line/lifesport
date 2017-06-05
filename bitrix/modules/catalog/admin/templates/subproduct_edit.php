@@ -2274,14 +2274,14 @@ SetSubFieldsStyle('subcatalog_properties_table');
 				if ($bStore)
 				{
 					$storeId = $row['ID'];
-					$address = ('' != $row['ADDRESS'] ? $row['ADDRESS'] : '<a href="/bitrix/admin/cat_store_edit.php?ID='.$row['ID'].'&lang='.LANGUAGE_ID.'">'.GetMessage("C2IT_EDIT").'</a>');
+					$address = ('' != $row['ADDRESS'] ? htmlspecialcharsbx($row['ADDRESS']) : '<a href="/bitrix/admin/cat_store_edit.php?ID='.$row['ID'].'&lang='.LANGUAGE_ID.'">'.GetMessage("C2IT_EDIT").'</a>');
 					$storeUrl = '<a href="/bitrix/admin/cat_store_edit.php?ID='.$row['ID'].'&lang='.LANGUAGE_ID.'">'.$storeUrl.'</a>';
 				}
 				?><tr>
 				<td style="text-align:center;"><?=$storeUrl; ?></td>
 				<td style="text-align:center;"><?=$storeId; ?></td>
 				<td style="text-align:center;"><?=htmlspecialcharsbx($row['TITLE']); ?></td>
-				<td style="text-align:center;"><?=htmlspecialcharsbx($address); ?></td>
+				<td style="text-align:center;"><?=$address; ?></td>
 				<td style="text-align:center;"><input type="text" id="SUBAR_AMOUNT_<?=$row['ID']; ?>" name="SUBAR_AMOUNT[<?=$row['ID']?>]" size="12" value="<?=htmlspecialcharsbx($row['PRODUCT_AMOUNT']); ?>" <? echo ((!$bStore || $bUseStoreControl) ? 'disabled readonly' : ''); ?>><?
 				if ($bStore)
 				{

@@ -2814,7 +2814,7 @@ span.adm-detail-tab.adm-detail-tab-active:after {
 }
 
 .adm-detail-content {
-	padding:12px 18px 12px 12px;
+	padding:12px 18px 0 12px;
 }
 
 .adm-detail-title {
@@ -3329,7 +3329,7 @@ it's made to prevent appearing of artefacts from old admin button icons.
 /*======================================================MENU ICONS=========================================*/
 
 .adm-submenu-item-link-icon {
-	background:url("images/icons-sprite-14.png") no-repeat center -1512px;
+	background:url("images/icons-sprite-14.png?1") no-repeat center -1512px;
 }
 .fav_menu_icon {background-position:center -1540px;}
 .iblock_menu_icon_iblocks {background-position:center -56px;}
@@ -3370,6 +3370,7 @@ it's made to prevent appearing of artefacts from old admin button icons.
 .iblock_menu_icon_settings {background-position: center -168px;}
 .sale_menu_icon {background-position: center -1344px;}
 .sale_menu_icon_buyers_affiliate {background-position: center -1288px;}
+.sale_menu_icon_marketplace {background-position: center -2492px;}
 .update_marketplace {background-position: center -1400px;}
 .update_marketplace_modules {background-position: center -1456px;}
 .statistic_icon_online {background-position: center -1093px;}

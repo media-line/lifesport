@@ -170,7 +170,7 @@ if($arResult['ITEMS']){?>
 						<div class="item-title">
 							<a href="<?=$arItem["DETAIL_PAGE_URL"]?><?=($arResult["RID"] ? '?RID='.$arResult["RID"] : '')?>"><span><?=$arItem["NAME"]?></span></a>
 						</div>
-						<?/*=$arQuantityData["HTML"];*/?>
+						<?=$arQuantityData["HTML"];?>
 						<div class="cost prices clearfix">
 							<?if($arItem["OFFERS"]):?>
 								<?$minPrice = false;

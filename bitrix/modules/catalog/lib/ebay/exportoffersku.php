@@ -174,6 +174,9 @@ class ExportOfferSKU extends ExportOffer
 
 		$arOfferFilter = array('IBLOCK_ID' => $this->intOfferIBlockID, 'PROPERTY_'.$this->arOffers['SKU_PROPERTY_ID'] => 0,
 			"ACTIVE" => "Y", "ACTIVE_DATE" => "Y");
+		
+		if($this->onlyAvailableElements)
+			$arOfferFilter["CATALOG_AVAILABLE"] = "Y";
 
 		if (YANDEX_SKU_EXPORT_PROP == $this->arSKUExport['SKU_EXPORT_COND'])
 		{

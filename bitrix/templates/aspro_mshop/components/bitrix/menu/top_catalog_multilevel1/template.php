@@ -1,7 +1,7 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)die();
 $this->setFrameMode(true);
-$maxRootItems = 5;
+$maxRootItems = 30;
 $bMoreThanMax = count($arResult) > $maxRootItems ;
 ?>
 <?if($arResult):?>
@@ -17,6 +17,7 @@ $bMoreThanMax = count($arResult) > $maxRootItems ;
                             ?>
                         
 							<div class="child_wrapp">
+                                <div class="child_wrapp-inner">
                                 <? if($img['src']){ ?>
                                     <? if($arItem['PARAMS']['BANNER_LINK']){ ?>
                                         <a class="menu-banner" href="<? echo $arItem['PARAMS']['BANNER_LINK']; ?>" target="_blank">
@@ -62,12 +63,14 @@ $bMoreThanMax = count($arResult) > $maxRootItems ;
 									<a class="see_more" rel="nofollow" href="javascript:;"><?=GetMessage('CATALOG_VIEW_MORE')?></span></a>
 									<!--/noindex-->
 								<?endif;?>
+                                </div>
 							</div>
 						</div>
 					<?endif;?>
 				</li>
 			<?endif;?>
 		<?endforeach;?>
+        <?/*
 		<li class="more menu_item_l1">
 			<a><?=GetMessage("CATALOG_VIEW_MORE_")?><i></i></a>
 			<div class="child cat_menu">
@@ -106,6 +109,7 @@ $bMoreThanMax = count($arResult) > $maxRootItems ;
 				</div>
 			</div>
 		</li>
+        */?>
 		<li class="stretch"></li>
 	</ul>
 	<script type="text/javascript">

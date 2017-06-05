@@ -14,7 +14,7 @@ $readOnly = !$USER->CanDoOperation('catalog_discount');
 $boolShowCoupons = true;
 
 if ($ex = $APPLICATION->GetException())
-{
+{ 
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 	ShowError($ex->GetString());
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

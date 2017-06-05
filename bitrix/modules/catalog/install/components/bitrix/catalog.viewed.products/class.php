@@ -7,6 +7,14 @@ use Bitrix\Main,
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
+/**
+ * Class CCatalogViewedProductsComponent
+ *
+ * No longer used by internal code and not recommended. Use "catalog.products.viewed" instead.
+ *
+ * @deprecated deprecated since catalog 17.0.5
+ * @use \CatalogProductsViewedComponent
+ */
 class CCatalogViewedProductsComponent extends CBitrixComponent
 {
 	const ACTION_BUY = 'BUY';

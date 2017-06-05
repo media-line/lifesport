@@ -7,6 +7,7 @@ use Bitrix\Main,
 	Bitrix\Iblock,
 	Bitrix\Catalog,
 	Bitrix\Sale\DiscountCouponsManager,
+	Bitrix\Sale\Discount\Context,
 	Bitrix\Sale\Order,
 	Bitrix\Sale;
 
@@ -1043,7 +1044,7 @@ class CAllCatalogDiscount
 		return $reformatList;
 	}
 
-	private static function getSaleDiscountsByProduct(array $product, $siteId, array $priceRow = array(), $isRenewal = false)
+	private static function getSaleDiscountsByProduct(array $product, $siteId, array $userGroups, array $priceRow = array(), $isRenewal = false)
 	{
 		\Bitrix\Sale\DiscountCouponsManager::freezeCouponStorage();
 
@@ -1074,7 +1075,7 @@ class CAllCatalogDiscount
 		}
 		else
 		{
-			$discount = \Bitrix\Sale\Discount::loadByBasket($basket);
+			$discount = \Bitrix\Sale\Discount::buildFromBasket($basket, new Context\UserGroup($userGroups));
 		}
 
 		$discount->setExecuteModuleFilter(array('all', 'catalog'));
@@ -1209,7 +1210,7 @@ class CAllCatalogDiscount
 					continue;
 				}
 
-				foreach(static::getSaleDiscountsByProduct($product, $siteID, $priceRow, $strRenewal === 'Y') as $discount)
+				foreach(static::getSaleDiscountsByProduct($product, $siteID, $arUserGroups, $priceRow, $strRenewal === 'Y') as $discount)
 				{
 					if(isset($finalDiscounts[$discount['ID']]))
 					{
@@ -1607,6 +1608,7 @@ class CAllCatalogDiscount
 				'MODULE' => 'catalog',
 			);
 
+			$allUserGroupsId = array_keys(static::getAllUserGroups());
 			foreach ($siteList as $siteId)
 			{
 				foreach ($prices as $priceRow)
@@ -1616,7 +1618,7 @@ class CAllCatalogDiscount
 						continue;
 					}
 
-					$siteResult = static::getSaleDiscountsByProduct($product, $siteId, $priceRow, $renewal);
+					$siteResult = static::getSaleDiscountsByProduct($product, $siteId, $allUserGroupsId, $priceRow, $renewal);
 					if (empty($siteResult))
 						continue;
 
@@ -1705,6 +1707,22 @@ class CAllCatalogDiscount
 		}
 
 		return $arResult;
+	}
+
+	protected static function getAllUserGroups()
+	{
+		static $groups = array();
+
+		if(!$groups)
+		{
+			$dbGroupsList = \CGroup::GetListEx(Array("ID" => "DESC"), array("ACTIVE" => "Y"));
+			while ($group = $dbGroupsList->Fetch())
+			{
+				$groups[$group["ID"]] = $group["NAME"];
+			}
+		}
+
+		return $groups;
 	}
 
 	public static function GetRestrictions($arParams, $boolKeys = true, $boolRevert = true)
