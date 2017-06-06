@@ -232,6 +232,25 @@ class ImportLS
     }
 }
 
+//создаем функцию сравнения параметров объектов $import и $export
+//на входе $pimport - параметр объекта $import; $pexport - параметр объекта $export
+//на выходе $checkempty=true - если совпадений не найдено; $arr[] - где $value - id совпавших значений
+function Compare($pimport, $pexport)
+{
+    $arr = [];
+    foreach ($pexport as $key => $value) {
+        if ($value == $pimport) {
+            array_push($arr, $key);
+        }
+    }
+    if (count($arr) == 0) {
+        $checkempty = true;
+        return $checkempty;
+    } else {
+        return $arr;
+    }
+}
+
 foreach ($arIMP as $key => $value) {
     if ($key == 0) continue;
     if ($key == 2) break;
@@ -252,56 +271,64 @@ foreach ($arIMP as $key => $value) {
     //в объект ($import) добавляем значения парметров (Цвет, Размер)
     $IColor = $import->color = $value[2]; //цвет
     $ISize = $import->size = $value[3]; //размер
-    //создаем массив сравнения
-    $arrComparison = [];
-
-    //создаем функцию сравнения параметров объектов $import и $export
-    //на входе $pimport - параметр объекта $import; $pexport - параметр объекта $export
-    //на выходе $checkempty=true - если совпадений не найдено; $arr[] - где $value - id совпавших значений
-    function Compare($pimport, $pexport)
-    {
-        $arr = [];
-        foreach ($pexport as $key => $value) {
-            if ($value == $pimport) {
-                array_push($arr, $key);
-            }
-        }
-        if (count($arr) == 0) {
-            $checkempty = true;
-            return $checkempty;
-        } else {
-            return $arr;
-        }
-    }
-
-    //сравниваем параметры объекта $import c парметрами объекта $export (Цвет, Размер)
     //сравниваем массив цвета $export со значением параметра цвета $import
     $CompareColor = Compare($IColor, $EColor);
     //сравниваем массив размера $export со значением параметра размера $import
     $CompareSize = Compare($ISize, $ESize);
-    //TODO:делаем проверку на совпадение значений
-    if ($CompareSize or $CompareColor == true) {
-        //TODO: если true - то значит нужного торгового предложения не существует и его надо создать
+    //делаем проверку на наличие совпадения значений, чтобы получить id торгового предложения которому соответствует обрабатываемая строка файла импорта
+    if (!is_array($CompareSize) or !is_array($CompareColor)) {
+        //TODO: нужного торгового предложения не существует и его надо создать
         //TODO: перед созданием торгового предложения проверяем наличие нужных Цвета и Размера в справочнике
         //TODO: если Цвета и/или Размера нет - создаем новый
         //TODO: создаем новое торговое предложение
         //TODO: после создания торгового предложения возвращаем его id
     } else {
-        //TODO: если false - объединяем значения временных массивов в массив сравнения и возвращаем его
+        //если нашлись совпадающие значения сравниваем значения одного и второго массивов
+        foreach ($CompareSize as $val) {
+            foreach ($CompareColor as $item) {
+                //если нашились равенства - возвращаем занчение $value, как значение $id
+                if ($item == $val) {
+                    $id = $item;
+                    break;
+                }
+            }
+        }
+        //если равенства нет - возвращаем текстовое сообщение
+        if (!isset($id)) {
+            echo $key . " Данный товар не может быть модифицирован с помощью импорта. Рекомендуется произвести его модификацию вручную.";
+        }
+    }
+    //в объект ($import) добавляем значение параметра id торгового предложения и недостающие значения для импорта (Магазин, Количество, Цена)
+    $Iid = $import->idtp = $id;
+    unset($id);
+    $IShop = $import->warehouse = $value[4];
+    $IAmount = $import->amount = $value[5];
+    $IPrice = $import->cost = $value[6];
+    //по полученному id получаем в объект $export значения (Магазин, Количество, Цена) этого торгового предложения из БД
+    $IBLOCK_ID = 21;
+    $mxResult = CCatalogSKU::GetProductInfo($Iid);
+    $ID = $mxResult['ID'];
+    $arInfo = CCatalogSKU::GetInfoByProductIBlock($IBLOCK_ID);
+    if (is_array($arInfo)) {
+        $rsOffers = CIBlockElement::GetList(
+                array(),
+                array('IBLOCK_ID' => $arInfo['IBLOCK_ID'],                'PROPERTY_' . $arInfo['SKU_PROPERTY_ID'] => $ID)
+        );
+        while ($arOffer = $rsOffers->GetNext()) {
+            ?><pre><?php
+                var_dump($arOffer);
+            ?></pre><?php
+        }
     }
 
-    //TODO: производим сравнение $key временного массива c $value временного массива
-    //TODO: если равно - возвращаем занчение $value
-    //TODO: если равенства нет - возвращаем текстовое сообщение - "данный товар не может быть модифицирован с помощью импорт - рекомендуется сделать это вручную"
-
-    /*    echo "<pre>";
-        var_dump($import);
-        echo "<br/>";
-        var_dump($export);
-        echo "<br/><br/></pre>";*/
 
 
-    //TODO: по полученному id торгового предложения, в объект $export получаем его параметры Магазин, Количество, Цена
+/*    echo "<pre>";
+    var_dump($import);
+    echo "<br/>";
+    var_dump($export);
+    echo "<br/><br/></pre>";*/
+
     //TODO: сравниваем параметры объекта $import с параметрами объекта $export (Магазин)
     //TODO: если находим - сравниваем параметры объекта $import с параметрами объекта $export (Количество)
     //TODO: если одинаково - continue
