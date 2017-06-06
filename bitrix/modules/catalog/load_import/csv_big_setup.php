@@ -158,7 +158,8 @@ class ImportLS
     }
 
     //метод импорта значения
-    function IMP($qr) {
+    function IMP($qr)
+    {
         global $DB;
         $query = $qr;
         $result = $DB->Query($query);
@@ -218,13 +219,13 @@ class ImportLS
     function getColor($arSize)
     {
         $arColor = [];
-        foreach ($arSize as $key=>$value) {
+        foreach ($arSize as $key => $value) {
             $qr = "SELECT VALUE FROM b_iblock_element_property WHERE IBLOCK_PROPERTY_ID=129 AND IBLOCK_ELEMENT_ID=$key";
             $sample = "VALUE";
             $color[$key] = $this->Query($qr, $sample);
             unset($qr, $sample);
-            foreach ($color as $key=>$value) {
-                $arColor[$key] = $value[count($value)-1];
+            foreach ($color as $key => $value) {
+                $arColor[$key] = $value[count($value) - 1];
             }
         }
         return $arColor;
@@ -233,6 +234,7 @@ class ImportLS
 
 foreach ($arIMP as $key => $value) {
     if ($key == 0) continue;
+    if ($key == 2) break;
     $import = new ImportLS();
     //определяем где в массиве из сайта будет артикул
     $import->article = $value[0];
@@ -242,105 +244,73 @@ foreach ($arIMP as $key => $value) {
     $arSize = $import->getSize($arID);
     //получаем массив с Цветом для каждого торгового предложения из БД
     $arColor = $import->getColor($arSize);
-
-
-    //получаем цвет товара к которому привязаны торговые предложения из БД
-    /*$arColor = $import->getColor($arID);
-    //создаем объекты и свойства для сравнения данных из файла импорта и данных полученных из БД
+    //из класса ImportLS создаём объект с параметрами (Цвет, Размер, ID торгового предложения) из БД ($export)
     $export = new ImportLS();
-    $EColor = $export->color = $arColor;
-    $ESize = $export->size = $arSize;
+    $EColor = $export->color = $arColor; //цвет
+    $ESize = $export->size = $arSize; //размер
+    $EID = $export->idtp = $arID; //массив id торговых предложений
+    //в объект ($import) добавляем значения парметров (Цвет, Размер)
+    $IColor = $import->color = $value[2]; //цвет
+    $ISize = $import->size = $value[3]; //размер
+    //создаем массив сравнения
+    $arrComparison = [];
 
-    $IColor = $import->color = $value[2];
-    $ISize = $import->size = $value[3];
-
-    //производим сравнение цвета и получаем значение ID торгового предложения для которого надо изменить цену и количество ($targetID)
-    $targetID = null;
-    function ColorCompare ($EColor, $IColor, $ESize, $ISize, $number) {
-        if ($EColor == $IColor) {
-            foreach ($ESize as $key => $item) {
-                if ($item == $ISize) {
-                    $targetID = $key;
-                    return $targetID;
-                } else continue;
+    //создаем функцию сравнения параметров объектов $import и $export
+    //на входе $pimport - параметр объекта $import; $pexport - параметр объекта $export
+    //на выходе $checkempty=true - если совпадений не найдено; $arr[] - где $value - id совпавших значений
+    function Compare($pimport, $pexport)
+    {
+        $arr = [];
+        foreach ($pexport as $key => $value) {
+            if ($value == $pimport) {
+                array_push($arr, $key);
             }
+        }
+        if (count($arr) == 0) {
+            $checkempty = true;
+            return $checkempty;
         } else {
-            echo $number.". Совпадение цветов не найдено";
-            //TODO: добавляем новый цвет в справочник
-            $qr = "INSERT INTO b_iblock_property_enum (PROPERTY_ID, VALUE) VALUES (128, $IColor)";
-            global $DB;
-            $DB->Query($qr);
-            unset($qr);
-
-
-            //TODO: рекурсивно запускаем функцию ColorCompare
+            return $arr;
         }
     }
 
-    $targetID = ColorCompare($EColor, $IColor, $ESize, $ISize, $key);
-
-    $import->idtp = $targetID;
-
-    //получаем массив соответствия id магазина и его названия
-    $qr = "SELECT ID, TITLE FROM b_catalog_store";
-    $simple = "ID";
-    $simplekey = "TITLE";
-    $arStore = $export->Query($qr, $simple, $simplekey);
-    unset($qr, $sample, $samplekey);
-
-    //заменяем в объекте название магазина на его id
-    //получаем название
-    $IStore = $value[4];
-    //проходим по массиву соответствия id и названия магазина и получаем его id
-    foreach ($arStore as $key=>$item) {
-        if ($key==$IStore) {
-            $IStore = $item;
-            break;
-        } else {
-            $IStore = "Нужный магазин не найден. Необходимо его создать.";
-        };
-    }
-    //заменяем в объекте название на id
-    $import->warehouse = $IStore;
-
-    //импортируем количество товара в магазине
-    $import->amount = $value[5];
-    //TODO: перед испортом необходимо сделать проверку на наличие строк в таблице. и если строк нет - до не UPDATE, а INSERT
-    //проверяем наличие строк в таблице
-    $qr = "SELECT * FROM b_catalog_store_product WHERE STORE_ID=$import->warehouse AND PRODUCT_ID=$import->idtp";
-    $sample = "AMOUNT";
-    $check = $import->Query($qr, $sample);
-    if (count($check) == 0) {
-        //TODO: добавление записи с количеством товара в магазине
-        $qrv = "INSERT INTO b_catalog_store_product (PRODUCT_ID, AMOUNT, STORE_ID) VALUES ($import->idtp, $import->amount, $import->warehouse)";
-        $import->IMP($qrv);
+    //сравниваем параметры объекта $import c парметрами объекта $export (Цвет, Размер)
+    //сравниваем массив цвета $export со значением параметра цвета $import
+    $CompareColor = Compare($IColor, $EColor);
+    //сравниваем массив размера $export со значением параметра размера $import
+    $CompareSize = Compare($ISize, $ESize);
+    //TODO:делаем проверку на совпадение значений
+    if ($CompareSize or $CompareColor == true) {
+        //TODO: если true - то значит нужного торгового предложения не существует и его надо создать
+        //TODO: перед созданием торгового предложения проверяем наличие нужных Цвета и Размера в справочнике
+        //TODO: если Цвета и/или Размера нет - создаем новый
+        //TODO: создаем новое торговое предложение
+        //TODO: после создания торгового предложения возвращаем его id
     } else {
-        $qr = "UPDATE b_catalog_store_product SET AMOUNT=$import->amount WHERE STORE_ID=$import->warehouse AND PRODUCT_ID=$import->idtp";
-        $import->IMP($qr);
-        unset($qr);
-    };
-    var_dump($check);
-    unset($qr, $check, $qrv);
+        //TODO: если false - объединяем значения временных массивов в массив сравнения и возвращаем его
+    }
 
-    //импортируем цену торгового предложения
-    //TODO: перед имортом необходимо сделать проверку на наличие строк в таблице. и если строк нет - до не UPDATE, а INSERT
-    $import->cost = $value[6];
-    $qr = "UPDATE b_catalog_price SET PRICE_SCALE=$import->cost WHERE PRODUCT_ID=$import->idtp";
-    //$import->IMP($qr);
-    //unset($qr);*/
+    //TODO: производим сравнение $key временного массива c $value временного массива
+    //TODO: если равно - возвращаем занчение $value
+    //TODO: если равенства нет - возвращаем текстовое сообщение - "данный товар не может быть модифицирован с помощью импорт - рекомендуется сделать это вручную"
 
-    ?>
-    <pre><?php
-    //var_dump($arIMP);
-    //var_dump($arID);
-    //var_dump($arSize);
-    //var_dump($arColor);
-    //var_dump($import);
-    //var_dump($arSize);
-    //var_dump($arStore);
-    //var_dump($IStore);
-    ?></pre><?php
+    /*    echo "<pre>";
+        var_dump($import);
+        echo "<br/>";
+        var_dump($export);
+        echo "<br/><br/></pre>";*/
 
+
+    //TODO: по полученному id торгового предложения, в объект $export получаем его параметры Магазин, Количество, Цена
+    //TODO: сравниваем параметры объекта $import с параметрами объекта $export (Магазин)
+    //TODO: если находим - сравниваем параметры объекта $import с параметрами объекта $export (Количество)
+    //TODO: если одинаково - continue
+    //TODO: если отличается - заменяем
+    //TODO: если не находим - добавляем новый магазин
+    //TODO: добавляем количество товара в этом магазине
+    //TODO: сравниваем параметры объекта $import с параметрами объекта $export (Цена)
+    //TODO: если одинаково - continue
+    //TODO: если отличается - заменяем
 }
 
 $fileclose = fclose($fh);
