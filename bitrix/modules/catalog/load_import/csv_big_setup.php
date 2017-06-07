@@ -251,9 +251,9 @@ function Compare($pimport, $pexport)
     }
 }
 
-foreach ($arIMP as $key => $value) {
-    if ($key == 0) continue;
-    if ($key == 2) break;
+foreach ($arIMP as $keyt => $value) {
+    if ($keyt == 0) continue;
+    //if ($keyt == 3) break;
     $import = new ImportLS();
     //определяем где в массиве из сайта будет артикул
     $import->article = $value[0];
@@ -305,42 +305,64 @@ foreach ($arIMP as $key => $value) {
     $IAmount = $import->amount = $value[5];
     $IPrice = $import->cost = $value[6];
     //по полученному id получаем в объект $export значения (Магазин, Количество, Цена) этого торгового предложения из БД
-    $IBLOCK_ID = 21;
-    $mxResult = CCatalogSKU::GetProductInfo($Iid);
-    $ID = $mxResult['ID'];
-    $arInfo = CCatalogSKU::GetInfoByProductIBlock($IBLOCK_ID);
-    if (is_array($arInfo)) {
-        $rsOffers = CIBlockElement::GetList(
-                array(),
-                array('IBLOCK_ID' => $arInfo['IBLOCK_ID'],                'PROPERTY_' . $arInfo['SKU_PROPERTY_ID'] => $ID)
+    //получаем цену
+    $ar_res = CPrice::GetBasePrice($Iid, false);
+    $EPrice = $export->cost = $ar_res["PRICE"];
+    $idPrice = $ar_res["ID"];
+    //определяем ID нужного нам магазина
+    $nmStore = CCatalogStore::GetList();
+    $Store = [];
+    while ($tmStore = $nmStore->Fetch()) {
+        $Store[$tmStore["ID"]] = $tmStore["TITLE"];
+    }
+    foreach ($Store as $key => $item) {
+        if ($item == $IShop) {
+            $EShop = $export->warehouse = $StoreId = $key;
+        } else {
+            //TODO: если совпадения магазина в БД и в файле импорта не найдено
+        }
+    }
+    //получаем количество товара в зависимости от магазина
+    $rsStore = CCatalogStoreProduct::GetList(
+            array(),
+            array('PRODUCT_ID' =>$Iid, 'STORE_ID' => $StoreId), false, false, array('ID', 'AMOUNT'));
+    if ($arStore = $rsStore->Fetch()) {
+        $EAmount = $export->amount = $arStore['AMOUNT'];
+        $idAmount = $arStore["ID"];
+    }
+    //сравниваем Цены, при необходимости - импортируем новые
+    if ($EPrice != $IPrice) {
+        $ChPrice = CPrice::Update(
+                $idPrice,
+                array("PRODUCT_ID"=>$Iid,"PRICE"=>$IPrice)
         );
-        while ($arOffer = $rsOffers->GetNext()) {
-            ?><pre><?php
-                var_dump($arOffer);
-            ?></pre><?php
+        if ($ChPrice == false) {
+            echo "<br/>".$keyt.". проблемы с изменением цены";
+        }
+    }
+    //сравниваем количество, при необходимости - изменяем
+    if ($EAmount != $IAmount) {
+        $ChAmount = CCatalogStoreProduct::Update(
+                $idAmount,
+                array("PRODUCT_ID"=>$Iid, "STORE_ID"=>$EShop, "AMOUNT"=>$IAmount)
+        );
+        if ($ChAmount == false) {
+            echo "<br/>".$keyt.". проблемы с изменением количетсва";
         }
     }
 
-
-
-/*    echo "<pre>";
-    var_dump($import);
+    /*echo "<pre>";
+        var_dump($arStore);
     echo "<br/>";
-    var_dump($export);
+        var_dump($idAmount);
     echo "<br/><br/></pre>";*/
-
-    //TODO: сравниваем параметры объекта $import с параметрами объекта $export (Магазин)
-    //TODO: если находим - сравниваем параметры объекта $import с параметрами объекта $export (Количество)
-    //TODO: если одинаково - continue
-    //TODO: если отличается - заменяем
-    //TODO: если не находим - добавляем новый магазин
-    //TODO: добавляем количество товара в этом магазине
-    //TODO: сравниваем параметры объекта $import с параметрами объекта $export (Цена)
-    //TODO: если одинаково - continue
-    //TODO: если отличается - заменяем
+    $finish = true;
 }
 
 $fileclose = fclose($fh);
+if ($finish == true) {
+    echo "Импорт товаров - завершен. Благодарим за сотрудничество. Мы более не нуждаемся в Вашей биологической оболочке";
+}
 ?>
 
 
