@@ -340,7 +340,7 @@ foreach ($arIMP as $keyt => $value) {
 
             $obElement = new CIBlockElement();
             $arFields = array (
-                'NAME' => 'Товар',
+                'NAME' => 'Товар1',
                 'IBLOCK_ID' => $intProductIBlock,
                 'ACTIVE' => 'Y',
                 'SIZE' => 'XL'
@@ -349,7 +349,7 @@ foreach ($arIMP as $keyt => $value) {
             $intProductID = $obElement->Add($arFields);
             ?>
             <pre><?php
-            var_dump($intProductID);
+            var_dump($import);
             ?></pre><?php
             break;
         } else {
