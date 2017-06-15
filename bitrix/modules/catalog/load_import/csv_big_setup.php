@@ -289,85 +289,25 @@ foreach ($arIMP as $keyt => $value) {
     $CompareColor = Compare($IColor, $EColor);
 //сравниваем массив размера $export со значением параметра размера $import
     $CompareSize = Compare($ISize, $ESize);
-//делаем проверку на наличие совпадения значений, чтобы получить id торгового предложения которому соответствует обрабатываемая строка файла импорта
-    if (!is_array($CompareSize) or !is_array($CompareColor)) {
-//нужного торгового предложения не существует, создаем новое торговое предложение
-//перед созданием торгового предложения проверяем наличие нужных Цвета и Размера в справочнике
-        //echo "цвета или размера не существует в справочнике";
-        //добавляем несуществующий цвет в справочник
-        if (!is_array($CompareColor)) {
+    if (($CompareColor == true)||($CompareSize == true)) {
+        if ($CompareColor == true) {
 
-            CModule::IncludeModule("highloadblock");
+        } else {/**/}
+    } else {/**/}
 
-            //получаем массив со всеми цветами в справочнике
-            $entity_data_class = GetEntityDataClass(1);
-            $rsData = $entity_data_class::getList(array(
-                'select' => array('*')
-            ));
-            $arrNewColor = [];
-            while ($el = $rsData->fetch()) {
-                array_push($arrNewColor, $el);
-            }
+    echo "<pre>";
+    var_dump($CompareColor);
+    echo "<br/>";
+    var_dump($CompareSize);
+    echo "<br/><br/></pre>";
 
-            //проверяем сущестование цвета в справочнике
-            $checkcolor = false;
-            foreach ($arrNewColor as $key => $item) {
-                if ($IColor == $arrNewColor[$key]["UF_XML_ID"]) {
-                    $checkcolor = true;
-                    break;
-                } else continue;
-            };
-            if ($checkcolor == false) {
-                //добавляем нужный нам элемент
-                $entity_data_class = GetEntityDataClass(1);
-                $result = $entity_data_class::add(array(
-                    'UF_NAME' => $IColor,
-                    'UF_XML_ID' => $IColor,
-                ));
 
-                //получаем название нового
-                $NewColor = $arrNewColor[count($arrNewColor) - 1]["UF_XML_ID"];
-                $import->color = $NewColor;
-            }
 
-            //создаем новое торговое предложение с нужным цветом
-            $intSKUIBlock = 21;
-            $arCatalog = CCatalog::GetByID($intSKUIBlock);
-            if (!$arCatalog)
-                return;
-            $intProductIBlock = $arCatalog['PRODUCT_IBLOCK_ID'];
-            $intSKUProperty = $arCatalog['SKU_PROPERTY_ID'];
 
-            $obElement = new CIBlockElement();
-            $arFields = array (
-                'NAME' => 'Товар1',
-                'IBLOCK_ID' => $intProductIBlock,
-                'ACTIVE' => 'Y',
-                'SIZE' => 'XL'
-            );
 
-            $intProductID = $obElement->Add($arFields);
-            ?>
-            <pre><?php
-            var_dump($import);
-            ?></pre><?php
-            break;
-        } else {
-//если нашлись совпадающие значения сравниваем значения одного и второго массивов
-            foreach ($CompareSize as $val) {
-                foreach ($CompareColor as $item) {
-//если нашились равенства - возвращаем занчение $value, как значение $id
-                    if ($item == $val) {
-                        $id = $item;
-                        break;
-                    }
-                }
-            }
-//если равенства нет - возвращаем текстовое сообщение
-            if (!isset($id)) {
-                echo $key . " Данный товар не может быть модифицирован с помощью импорта. Рекомендуется произвести его модификацию вручную.";
-            }
-        }
+
+        break;
+
 //в объект ($import) добавляем значение параметра id торгового предложения и недостающие значения для импорта (Магазин, Количество, Цена)
         $Iid = $import->idtp = $id;
         unset($id);
@@ -421,12 +361,6 @@ foreach ($arIMP as $keyt => $value) {
             }
         }
 
-        /*echo "
-        <pre>";
-                var_dump($arStore);
-            echo "<br/>";
-                var_dump($idAmount);
-            echo "<br/><br/></pre>";*/
         $finish = true;
     }
 
@@ -434,9 +368,8 @@ foreach ($arIMP as $keyt => $value) {
     if ($finish == true) {
         echo "Импорт товаров - завершен. Благодарим за сотрудничество. Мы более не нуждаемся в Вашей биологической оболочке";
     }
-}
-?>
 
+?>
 
 <script type="text/javascript">
     function showTranslitSettings() {
