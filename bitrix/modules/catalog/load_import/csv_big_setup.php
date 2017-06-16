@@ -289,85 +289,141 @@ foreach ($arIMP as $keyt => $value) {
     $CompareColor = Compare($IColor, $EColor);
 //сравниваем массив размера $export со значением параметра размера $import
     $CompareSize = Compare($ISize, $ESize);
-    if (($CompareColor == true)||($CompareSize == true)) {
+    //если есть несовпадение цвета или размера - обрабатываем
+    if (($CompareColor == true) || ($CompareSize == true)) {
+        if ($CompareSize == true) {
+            //проверяем наличие цвета в БД
+            $sample = "VALUE";
+            $qr = "SELECT $sample FROM b_iblock_property_enum WHERE PROPERTY_ID=128";
+            $AllSize = $import->Query($qr,$sample);
+            $CheckSize = false;
+            foreach ($AllSize as $item) {
+                if ($item == $ISize) {
+                    $CheckSize = true;
+                    break;
+                } else continue;
+            }
+            if ($CheckSize == false) {
+                //если цвета в БД нет - добавляем его в БД
+                $valuet = "'" . $ISize . "'";
+                $qr = "INSERT INTO b_iblock_property_enum (PROPERTY_ID, VALUE) VALUES (128, $valuet)";
+                $import->IMP($qr);
+                echo "добавлен новый размер - " . $ISize;
+            } else {
+                /**/
+            }
+        } else {
+            /**/
+        }
         if ($CompareColor == true) {
+            //если нет совпадения в цвете проверяем его наличие в справочнике
+            CModule::IncludeModule("highloadblock");
+            //получаем массив со всеми цветами в справочнике
+            $entity_data_class = GetEntityDataClass(1);
+            $rsData = $entity_data_class::getList(array(
+                'select' => array('*')
+            ));
+            $arrNewColor = [];
+            while ($el = $rsData->fetch()) {
+                array_push($arrNewColor, $el);
+            }
+            //проверяем сущестование цвета в справочнике
+            $checkcolor = false;
+            foreach ($arrNewColor as $key => $item) {
+                if ($IColor == $arrNewColor[$key]["UF_XML_ID"]) {
+                    $checkcolor = true;
+                    break;
+                } else continue;
+            };
+            if ($checkcolor == false) {
+                //если цвета не существует в справочнике - добавляем в справочник новый цвет
+                $entity_data_class = GetEntityDataClass(1);
+                $result = $entity_data_class::add(array(
+                    'UF_NAME' => $IColor,
+                    'UF_XML_ID' => $IColor,
+                ));
 
-        } else {/**/}
-    } else {/**/}
+                //получаем название нового цвета
+                $NewColor = $arrNewColor[count($arrNewColor) - 1]["UF_XML_ID"];
+                $import->color = $NewColor;
+                echo "добавлен новый цвет - " . $NewColor;
+            } else {/**/
+            }
+        } else {
+            /**/
+        }
+        //создаем новое торговое предложение
 
-    echo "<pre>";
-    var_dump($CompareColor);
-    echo "<br/>";
-    var_dump($CompareSize);
-    echo "<br/><br/></pre>";
+    } else {
+        /**/
+    }
 
+    //создаем новое торговое предложение с нужными данными
 
+    echo "поздравляем, можно импортировать данные в ваш товар";
 
-
-
-
-        break;
+    break;
 
 //в объект ($import) добавляем значение параметра id торгового предложения и недостающие значения для импорта (Магазин, Количество, Цена)
-        $Iid = $import->idtp = $id;
-        unset($id);
-        $IShop = $import->warehouse = $value[4];
-        $IAmount = $import->amount = $value[5];
-        $IPrice = $import->cost = $value[6];
+    $Iid = $import->idtp = $id;
+    unset($id);
+    $IShop = $import->warehouse = $value[4];
+    $IAmount = $import->amount = $value[5];
+    $IPrice = $import->cost = $value[6];
 //по полученному id получаем в объект $export значения (Магазин, Количество, Цена) этого торгового предложения из БД
 //получаем цену
-        $ar_res = CPrice::GetBasePrice($Iid, false);
-        $EPrice = $export->cost = $ar_res["PRICE"];
-        $idPrice = $ar_res["ID"];
+    $ar_res = CPrice::GetBasePrice($Iid, false);
+    $EPrice = $export->cost = $ar_res["PRICE"];
+    $idPrice = $ar_res["ID"];
 //определяем ID нужного нам магазина
-        $nmStore = CCatalogStore::GetList();
-        $Store = [];
-        while ($tmStore = $nmStore->Fetch()) {
-            $Store[$tmStore["ID"]] = $tmStore["TITLE"];
-        }
-        foreach ($Store as $key => $item) {
-            if ($item == $IShop) {
-                $EShop = $export->warehouse = $StoreId = $key;
-            } else {
+    $nmStore = CCatalogStore::GetList();
+    $Store = [];
+    while ($tmStore = $nmStore->Fetch()) {
+        $Store[$tmStore["ID"]] = $tmStore["TITLE"];
+    }
+    foreach ($Store as $key => $item) {
+        if ($item == $IShop) {
+            $EShop = $export->warehouse = $StoreId = $key;
+        } else {
 //TODO: если совпадения магазина в БД и в файле импорта не найдено
-            }
         }
+    }
 //получаем количество товара в зависимости от магазина
-        $rsStore = CCatalogStoreProduct::GetList(
-            array(),
-            array('PRODUCT_ID' => $Iid, 'STORE_ID' => $StoreId), false, false, array('ID', 'AMOUNT'));
-        if ($arStore = $rsStore->Fetch()) {
-            $EAmount = $export->amount = $arStore['AMOUNT'];
-            $idAmount = $arStore["ID"];
-        }
+    $rsStore = CCatalogStoreProduct::GetList(
+        array(),
+        array('PRODUCT_ID' => $Iid, 'STORE_ID' => $StoreId), false, false, array('ID', 'AMOUNT'));
+    if ($arStore = $rsStore->Fetch()) {
+        $EAmount = $export->amount = $arStore['AMOUNT'];
+        $idAmount = $arStore["ID"];
+    }
 //сравниваем Цены, при необходимости - импортируем новые
-        if ($EPrice != $IPrice) {
-            $ChPrice = CPrice::Update(
-                $idPrice,
-                array("PRODUCT_ID" => $Iid, "PRICE" => $IPrice)
-            );
-            if ($ChPrice == false) {
-                echo "<br/>" . $keyt . ". проблемы с изменением цены";
-            }
+    if ($EPrice != $IPrice) {
+        $ChPrice = CPrice::Update(
+            $idPrice,
+            array("PRODUCT_ID" => $Iid, "PRICE" => $IPrice)
+        );
+        if ($ChPrice == false) {
+            echo "<br/>" . $keyt . ". проблемы с изменением цены";
         }
+    }
 //сравниваем количество, при необходимости - изменяем
-        if ($EAmount != $IAmount) {
-            $ChAmount = CCatalogStoreProduct::Update(
-                $idAmount,
-                array("PRODUCT_ID" => $Iid, "STORE_ID" => $EShop, "AMOUNT" => $IAmount)
-            );
-            if ($ChAmount == false) {
-                echo "<br/>" . $keyt . ". проблемы с изменением количетсва";
-            }
+    if ($EAmount != $IAmount) {
+        $ChAmount = CCatalogStoreProduct::Update(
+            $idAmount,
+            array("PRODUCT_ID" => $Iid, "STORE_ID" => $EShop, "AMOUNT" => $IAmount)
+        );
+        if ($ChAmount == false) {
+            echo "<br/>" . $keyt . ". проблемы с изменением количетсва";
         }
-
-        $finish = true;
     }
 
-    $fileclose = fclose($fh);
-    if ($finish == true) {
-        echo "Импорт товаров - завершен. Благодарим за сотрудничество. Мы более не нуждаемся в Вашей биологической оболочке";
-    }
+    $finish = true;
+}
+
+$fileclose = fclose($fh);
+if ($finish == true) {
+    echo "Импорт товаров - завершен. Благодарим за сотрудничество. Мы более не нуждаемся в Вашей биологической оболочке";
+}
 
 ?>
 
