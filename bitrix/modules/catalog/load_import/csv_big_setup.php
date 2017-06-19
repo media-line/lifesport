@@ -292,10 +292,10 @@ foreach ($arIMP as $keyt => $value) {
     //если есть несовпадение цвета или размера - обрабатываем
     if (($CompareColor == true) || ($CompareSize == true)) {
         if ($CompareSize == true) {
-            //проверяем наличие цвета в БД
+            //проверяем наличие размера в БД
             $sample = "VALUE";
             $qr = "SELECT $sample FROM b_iblock_property_enum WHERE PROPERTY_ID=128";
-            $AllSize = $import->Query($qr,$sample);
+            $AllSize = $import->Query($qr, $sample);
             $CheckSize = false;
             foreach ($AllSize as $item) {
                 if ($item == $ISize) {
@@ -304,7 +304,7 @@ foreach ($arIMP as $keyt => $value) {
                 } else continue;
             }
             if ($CheckSize == false) {
-                //если цвета в БД нет - добавляем его в БД
+                //если размера в БД нет - добавляем его в БД
                 $valuet = "'" . $ISize . "'";
                 $qr = "INSERT INTO b_iblock_property_enum (PROPERTY_ID, VALUE) VALUES (128, $valuet)";
                 $import->IMP($qr);
@@ -354,13 +354,50 @@ foreach ($arIMP as $keyt => $value) {
         }
         //создаем новое торговое предложение
 
+        $intSKUIBlock = 22;
+        $arCatalog = CCatalog::GetByID($intSKUIBlock);
+        $intProductIBlock = $arCatalog['PRODUCT_IBLOCK_ID']; // ID инфоблока товаров
+        $intSKUProperty = $arCatalog['SKU_PROPERTY_ID']; // ID свойства в инфоблоке предложений типа "Привязка к товарам (SKU)"
+
+        $intProductID = CCatalogSku::GetProductInfo($export->idtp[0], $intSKUIBlock); //получаем ID товара
+        $ar_res = CCatalogProduct::GetList(
+                array(),
+                array(
+                        "ID"=>$intProductID
+                )
+        );
+        $ProductPropFID = $ar_res->Fetch();
+
+        if ($intProductID) {
+            $arProp[$intSKUProperty] = $intProductID;
+            $arFields = array(
+                'NAME' => $ProductPropFID["ELEMENT_NAME"],
+                'IBLOCK_ID' => $intSKUIBlock,
+                'ACTIVE' => 'Y',
+                'PROPERTY_VALUES' => $arProp
+            );
+
+            $obElement = new CIBlockElement();
+            $intOfferID = $obElement->Add($arFields); //добавляем новое торговое предложение
+            $arrFields = array(
+                "ID" => $intOfferID,
+                "NAME" => $import->size
+            );
+            $UpdPropSKU = CCatalogProduct::Add($arrFields); //обновляем торговое предложение, чтобы его активировать
+            if ($UpdPropSKU) {
+                echo "импорт нового торгового предложения прошел удачно";
+            } else {
+                echo "испорт нового торгового предложения неудачен";
+            }
+
+            $arrProp = CCatalogProduct::GetByID($intOfferID);
+            ?><pre><?php
+            var_dump($arrProp);
+            ?></pre><?php
+        }
     } else {
         /**/
     }
-
-    //создаем новое торговое предложение с нужными данными
-
-    echo "поздравляем, можно импортировать данные в ваш товар";
 
     break;
 
