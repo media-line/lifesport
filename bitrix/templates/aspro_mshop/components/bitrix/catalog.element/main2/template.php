@@ -1606,10 +1606,6 @@ $arViewedData = array(
                     $this->skuid = $id;
                     $this->namestore = $namestore;
                     $this->amount = $amount;
-
-                    //var_dump($id);
-                    //var_dump($namestore);
-                    //var_dump($amount);
                     ?>
                     <?php foreach ($this->skuid as $key => $value) { ?>
                     <div class="<?php echo $value ?>">
@@ -1636,15 +1632,16 @@ $arViewedData = array(
 
                 //получаем id самого товара
                 $pid = $arResult["ID"];
+                $apid = array($pid);
 
                 //определяем есть ли у товара торговые предложения
-                $sku = CCatalogSku::getExistOffers($pid);
-                if ($sku[$pid]) {
+                $sku = CCatalogSku::getExistOffers($apid);
+                if ($sku) {
                     //если есть, определяем id торговых предложений
                     $ressku = CCatalogSku::getOffersList($pid);
-                    $resskuid = $ressku[$pid];
+                    $skid = $ressku[$pid];
                     $skuid = array();
-                    foreach ($resskuid as $key => $value) {
+                    foreach ($skid as $key => $value) {
                         array_push($skuid, $value["ID"]);
                     };
 
@@ -1655,17 +1652,28 @@ $arViewedData = array(
                         $stores[] = $sklad['TITLE'];
                     }
 
-                    //получаем массив с остатком в каждом складе-магазине
-                    $arFilter = Array("PRODUCT_ID" => $skuid);
-                    $res = CCatalogStoreProduct::GetList(Array(), $arFilter, false, false, $select_fields);
-                    while ($arRes = $res->Fetch()) {
-                        $sum[] = $arRes['AMOUNT'];
+                    CModule::IncludeModule('catalog');
+                    $dataStore = [];
+                    $nameStore = [];
+                    foreach ($skuid as $keyid => $id) {
+                        foreach ($stores as $ketstore => $stor) {
+                            $arFilter = Array("PRODUCT_ID"=>$id,"STORE_ID"=>$ketstore);
+                            $res = CCatalogStoreProduct::GetList(Array(),$arFilter,false,false,Array());
+                            if ($arRes = $res->GetNext()) {
+                                //$nameStore[$arRes["STORE_NAME"]] = $arRes["AMOUNT"];
+                                $dataStore[$arRes["STORE_NAME"]] = [$arRes["PRODUCT_ID"]];
+                                ?><pre><?php
+                                //var_dump($ressku);
+                                //var_dump($arRes);
+                                ?></pre><?php
+                            }
+                        }
                     }
 
-                    //выводим магазины и остаток
-                    $echo = new StoreProductSKU();
-                    $echo->EchoAmount($skuid, $stores, $sum);
-
+                    ?><pre><?php
+                    //var_dump($ressku);
+                    var_dump($dataStore);
+                    ?></pre><?php
                 } else {
                     echo GetMessage("QUANTITY_NO_OFFERS_MESSAGE");
                 }
