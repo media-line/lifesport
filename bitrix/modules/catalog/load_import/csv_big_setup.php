@@ -131,6 +131,13 @@ if (!empty($arSetupErrors))
 </form>
 
 <?php
+//TODO: удалить служебную функцию Pre
+function Pre ($data) {
+    ?><pre><?php
+        var_dump($data)
+    ?></pre><?php;
+}
+
 $arIMP = []; //массив содержащий данные по торговым предложениям из преобразованного файла-импорта
 $fh = fopen($_SERVER['DOCUMENT_ROOT'] . $_POST["URL_DATA_FILE"], 'r');
 while (($info = fgetcsv($fh, 1000, "@")) !== false) {
@@ -268,7 +275,6 @@ function Compare($pimport, $pexport)
 
 foreach ($arIMP as $keyt => $value) {
     if ($keyt == 0) continue;
-    if ($keyt == 2) break;
     $import = new ImportLS();
 //определяем где в массиве из сайта будет артикул
     $import->article = $value[0];
@@ -290,8 +296,9 @@ foreach ($arIMP as $keyt => $value) {
     $CompareColor = Compare($IColor, $EColor);
 //сравниваем массив размера $export со значением параметра размера $import
     $CompareSize = Compare($ISize, $ESize);
-    //если есть несовпадение цвета или размера - обрабатываем
+
     if (!(is_array($CompareColor)) || !(is_array($CompareSize))) {
+        //если есть несовпадение цвета или размера - обрабатываем
         if ($CompareSize == true) {
             //проверяем наличие размера в БД
             $sample = "VALUE";
@@ -359,16 +366,14 @@ foreach ($arIMP as $keyt => $value) {
         $arCatalog = CCatalog::GetByID($intSKUIBlock);
         $intProductIBlock = $arCatalog['PRODUCT_IBLOCK_ID']; // ID инфоблока товаров
         $intSKUProperty = $arCatalog['SKU_PROPERTY_ID']; // ID свойства в инфоблоке предложений типа "Привязка к товарам (SKU)"
-
         $intProductID = CCatalogSku::GetProductInfo($export->idtp[0], $intSKUIBlock); //получаем ID товара
         $ar_res = CCatalogProduct::GetList(
-                array(),
-                array(
-                        "ID"=>$intProductID
-                )
+            array(),
+            array(
+                "ID" => $intProductID
+            )
         );
         $ProductPropFID = $ar_res->Fetch();
-
         if ($intProductID) {
             $arProp[$intSKUProperty] = $intProductID;
             $arFields = array(
@@ -377,19 +382,17 @@ foreach ($arIMP as $keyt => $value) {
                 'ACTIVE' => 'Y',
                 'PROPERTY_VALUES' => $arProp
             );
-
             $obElement = new CIBlockElement();
             $intOfferID = $obElement->Add($arFields); //добавляем новое торговое предложение
             $arrField = array(
                 "ID" => $intOfferID,
             );
             $Up = CCatalogProduct::Add($arrField); //обновляем торговое предложение, чтобы его активировать
-
             //добавляем новые значения цвета и размера для вновь созданного торгового предложения
             //добавляем новый размер
             //определяем ID размера
             $sample = "ID";
-            $IS = "'".$ISize."'";
+            $IS = "'" . $ISize . "'";
             $qr = "SELECT $sample FROM b_iblock_property_enum WHERE PROPERTY_ID=128 AND VALUE=$IS";
             $querr = $import->Query($qr, $sample);
             //устанавливаем нужный размер, цвет и артикул
@@ -398,100 +401,116 @@ foreach ($arIMP as $keyt => $value) {
                 $intSKUIBlock,
                 array("SIZES" => $querr[0], "COLOR_REF" => $IColor, "ARTICLE" => $import->article)
             );
+            //получаем id торгового предложения и отправляем его в объект импорта
+            $Iid = $import->idtp = $intOfferID;
+            //получаем нужный магазин из файла импорта
+            $IShop = $import->warehouse = $value[4];
+            //получаем список всех имеющихся магазинов
+            $nmStore = CCatalogStore::GetList();
+            $Store = [];
+            while ($tmStore = $nmStore->Fetch()) {
+                $Store[$tmStore["ID"]] = $tmStore["TITLE"];
+            }
+            foreach ($Store as $key => $item) {
+                if ($item == $IShop) {
+                    $EShop = $export->warehouse = $key;
+                };
+            }     //получаем id нужного нам магазина
+            //по полученному id магазина устанавливаем в нем новое количество данного товара
+            //задаем нужное количество товара из файла импорта
+            $IAmount = $import->amount = $value[5];
+            //устанавливаем новое количество товара
+            $rsStore = CCatalogStoreProduct::GetList(array(), array(), false, false, array());
+            $IDSTR = $rsStore->Fetch();
+            $STR = $IDSTR['ID'];
+            $ChAmount = CCatalogStoreProduct::Add(
+                array("PRODUCT_ID" => $import->idtp, "STORE_ID" => $export->warehouse, "AMOUNT" => $import->amount)
+            );
+            //устанавливаем новую цену для торгового предложения
+            $IPrice = $import->cost = $value[6];
             $AddPriceSKU = CPrice::Add(
-                    array(
-                        "PRODUCT_ID" => $intOfferID,
-                        "CATALOG_GROUP_ID" => 0,
-                        "PRICE" => "0.00",
-                        "CURRENCY" => "BYN"
-                    )
+                array(
+                    "PRODUCT_ID" => $intOfferID,
+                    "CATALOG_GROUP_ID" => 1,
+                    "PRICE" => $import->cost,
+                    "CURRENCY" => "BYN"
+                )
             );
-            $GetPrice = CPrice::GetBasePrice(
-                $intOfferID, 1, 11
-            );
-            var_dump($GetPrice);
         }
-    } else if ((is_array($CompareColor))&&(is_array($CompareSize))) {
-        $GetPrice = CPrice::GetBasePrice(
-            901, 1, 11
-        );
-        var_dump($GetPrice);
     }
-
-//в объект ($import) добавляем значение параметра id торгового предложения и недостающие значения для импорта (Магазин, Количество, Цена)
-    if (!(is_array($CompareColor)) || !(is_array($CompareSize))) {
-        $Iid = $import->idtp = $intOfferID;
-    } else {
-        foreach ($CompareColor as $item) {
-            foreach ($CompareSize as $initem) {
-                if ($item == $initem) {
-                    $Iid = $import->idtp = $initem;
+    else if ((is_array($CompareColor)) && (is_array($CompareSize))) {
+        //если цвет и размер совпадают - получаем id торгового предложения
+        foreach ($CompareColor as $itemc) {
+            foreach ($CompareSize as $items) {
+                if ($itemc == $items) {
+                    $Iid = $import->idtp = $itemc;
                 }
             }
         }
-    }
-
-    $IShop = $import->warehouse = $value[4];
-    $IAmount = $import->amount = $value[5];
-    $IPrice = $import->cost = $value[6];
-//по полученному id получаем в объект $export значения (Магазин, Количество, Цена) этого торгового предложения из БД
-//получаем цену
-
-    $ar_res = CPrice::GetBasePrice($Iid, false);
-    $EPrice = $export->cost = $ar_res["PRICE"];
-    $idPrice = $ar_res["ID"];
-
-//определяем ID нужного нам магазина
-    $nmStore = CCatalogStore::GetList();
-    $Store = [];
-    while ($tmStore = $nmStore->Fetch()) {
-        $Store[$tmStore["ID"]] = $tmStore["TITLE"];
-    }
-    foreach ($Store as $key => $item) {
-        if ($item == $IShop) {
-            $EShop = $export->warehouse = $StoreId = $key;
-        } else {
-//TODO: если совпадения магазина в БД и в файле импорта не найдено
+        //получаем нужный магазин из файла импорта
+        $IShop = $import->warehouse = $value[4];
+        //получаем список всех имеющихся магазинов
+        $nmStore = CCatalogStore::GetList();
+        $Store = [];
+        while ($tmStore = $nmStore->Fetch()) {
+            $Store[$tmStore["ID"]] = $tmStore["TITLE"];
         }
-    }
-//получаем количество товара в зависимости от магазина
-    $rsStore = CCatalogStoreProduct::GetList(
-        array(),
-        array('PRODUCT_ID' => $Iid, 'STORE_ID' => $StoreId), false, false, array('ID', 'AMOUNT'));
-    if ($arStore = $rsStore->Fetch()) {
-        $EAmount = $export->amount = $arStore['AMOUNT'];
-        $idAmount = $arStore["ID"];
-    }
-//сравниваем Цены, при необходимости - импортируем новые
-    if ($EPrice != $IPrice) {
-        $ChPrice = CPrice::Update(
-            $idPrice,
-            array("PRODUCT_ID" => $Iid, "PRICE" => $IPrice)
+        foreach ($Store as $key => $item) {
+            if ($item == $IShop) {
+                $EShop = $export->warehouse = $key;
+            };
+        }     //получаем id нужного нам магазина
+        //по полученному id магазина устанавливаем в нем новое количество данного товара
+        //задаем нужное количество товара из файла импорта
+        $IAmount = $import->amount = $value[5];
+        //получаем id записи остатка товара
+        $getAmountShop = CCatalogStoreProduct::GetList(
+                array(),
+                array(
+                    'PRODUCT_ID' =>$import->idtp, 'STORE_ID' => $export->warehouse
+                ),
+                false,
+                false,
+                array()
         );
-        if ($ChPrice == false) {
-            echo "<br/>" . $keyt . ". проблемы с изменением цены";
-            continue;
-        }
-    }
-//сравниваем количество, при необходимости - изменяем
-    if ($EAmount != $IAmount) {
-        $ChAmount = CCatalogStoreProduct::Update(
-            $idAmount,
-            array("PRODUCT_ID" => $Iid, "STORE_ID" => $EShop, "AMOUNT" => $IAmount)
+        $arStore = $getAmountShop->Fetch();
+        $getAmountShopID = $arStore['ID'];
+        //обновляем количество товара
+        $updateAmountStore = CCatalogStoreProduct::Update(
+                $getAmountShopID,
+                array(
+                    "PRODUCT_ID" => $import->idtp,
+                    "STORE_ID" => $export->warehouse,
+                    "AMOUNT" => $import->amount
+                )
         );
-        if ($ChAmount == false) {
-            echo "<br/>" . $keyt . ". проблемы с изменением количетсва";
+        //изменяем цену для торгового предложения
+        $IPrice = $import->cost = $value[6];
+        $PRODUCT_ID = $import->idtp;
+        $PRICE_TYPE_ID = 1;
+        $arFields = Array(
+            "PRODUCT_ID" => $PRODUCT_ID,
+            "CATALOG_GROUP_ID" => $PRICE_TYPE_ID,
+            "PRICE" => $import->cost,
+            "CURRENCY" => "BYN"
+        );
+        $res = CPrice::GetList(
+            array(),
+            array(
+                "PRODUCT_ID" => $PRODUCT_ID,
+                "CATALOG_GROUP_ID" => $PRICE_TYPE_ID
+            )
+        );
+        if ($arr = $res->Fetch())
+        {
+            CPrice::Update($arr["ID"], $arFields);
         }
     }
 
-    $finish = true;
+    echo $keyt.". импорт выполнен успешно<br/>";
 }
 
 $fileclose = fclose($fh);
-if ($finish == true) {
-    echo "Импорт товаров - завершен.";
-}
-
 ?>
 
 <script type="text/javascript">

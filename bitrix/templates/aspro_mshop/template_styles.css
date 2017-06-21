@@ -515,7 +515,7 @@ body #header ul.menu li .child.line .child_wrapp > a:hover, body #header ul.menu
 .middle-h-row .search_middle_block .middle_form .big{padding-right:100px;background:#e7e7e7;border-color:transparent;padding-left:18px;}
 .center_block .search_block .icon.open, .h_color_colored .header_wrap .center_block .search_block .icon.open{background-position:-169px -175px;right:-10px;top:2px;position:absolute;width:40px;height:38px;}
 
-#header .middle-h-row .center_block .search{margin:0 0px 0 56px;position:relative;zoom:1;display:none;width:63%;}
+#header .middle-h-row .center_block .search{margin:0 0px 0 56px;position:relative;zoom:1;display:none;}
 #header .middle-h-row .center_block .middle_phone{display:none;}
 .wrapper.has_menu #header .middle-h-row .center_block .search, .wrapper.has_menu #header .middle-h-row .center_block .middle_phone{display:inline-block;vertical-align:middle;transition:margin ease 0.25s;}
 #header .middle-h-row .center_block .middle_phone{min-width:174px;}
@@ -3353,4 +3353,9 @@ ul.menu li.stretch {
 
 .quantity p {
 	margin: 5px 0;
+}
+
+.copyright-foot {
+	float: right;
+	margin-top: 10px;
 }

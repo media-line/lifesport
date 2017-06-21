@@ -1606,19 +1606,22 @@ $arViewedData = array(
                     $this->skuid = $id;
                     $this->namestore = $namestore;
                     $this->amount = $amount;
-                    ?>
 
+                    //var_dump($id);
+                    //var_dump($namestore);
+                    //var_dump($amount);
+                    ?>
                     <?php foreach ($this->skuid as $key => $value) { ?>
                     <div class="<?php echo $value ?>">
                         <?php
                         for ($r = 0; $r < count($this->namestore); $r++) { ?>
-                            <?php $quantity = $this->amount[$key + ($r * count($this->skuid))] ?>
-                            <?php if($quantity > 0){ ?>
+                            <?php $quantity = $this->amount[$key + $r] ?>
+
                                 <p>
                                     <?php echo $this->namestore[$r] ?>
-                                    - <?php echo $quantity; ?> <?= $strMeasure ?>
+                                    - <?php echo $quantity; ?>
                                 </p>
-                            <?php } ?>
+
                         <?php } ?>
                     </div>
                     <?php
@@ -1689,7 +1692,7 @@ $arViewedData = array(
                     var par = document.getElementsByClassName('quantity')[0];
                     var targ = par.getElementsByTagName('div');
 
-                    //скрываем не нужные элементы
+                    //скрываем ненужные элементы
                     for (var r = 0; r < targ.length; r++) {
                         if (targ[r].className != pid) {
                             targ[r].style.display = "none";
@@ -1699,18 +1702,15 @@ $arViewedData = array(
                     }
 
                     //Получаем название активного торгового предложения
-
                     var offers = document.getElementsByClassName('bx_size')[0];
                     var activeOffer = offers.getElementsByClassName('active')[0];
                     var availabilityOffer = $('.availability-offer-value');
                     availabilityOffer.html(activeOffer.getAttribute('title'));
-                    //console.log(availabilityOffer);
-                    //console.log(activeOffer.getAttribute('title'));
                 }
 
-                //отлавливаем клик по блоку с размерами
+                //отлавливаем клик по блоку с размерами и цветом
                 function ClickSize() {
-                    var targ = document.getElementsByClassName('bx_size')[0];
+                    var targ = document.getElementsByClassName('wrapper_sku')[0];
                     targ.onclick = function () {
                         ShowHideAmount();
                     }

@@ -148,6 +148,7 @@
 									</div>
 								</div>
 								<div id="bx-composite-banner"></div>
+                                <div class="copyright-foot">Разработка сайта:<a target="_blank" href="http://www.medialine.by"> Медиа Лайн</a> </div>
 							</div>
 						</div>
 					</div>
