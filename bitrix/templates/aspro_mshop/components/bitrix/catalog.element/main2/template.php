@@ -84,9 +84,9 @@ unset($currencyList, $templateLibrary);
 // заменяем картинки цветов на соотв. картинки из предложений
 foreach ($arResult['SKU_PROPS']['COLOR_REF']['VALUES'] as &$colorValue) {
     foreach ($arResult['OFFERS'] as $offer) {
-        if($colorValue['XML_ID'] == $offer['PROPERTIES']['COLOR_REF']['VALUE']) {
-            if(isset($offer['DETAIL_PICTURE']['ID'])) {
-                $img_ = CFile::ResizeImageGet($offer['DETAIL_PICTURE']['ID'], array( "width" => 100, "height" => 100 ), BX_RESIZE_IMAGE_EXACT, true );
+        if ($colorValue['XML_ID'] == $offer['PROPERTIES']['COLOR_REF']['VALUE']) {
+            if (isset($offer['DETAIL_PICTURE']['ID'])) {
+                $img_ = CFile::ResizeImageGet($offer['DETAIL_PICTURE']['ID'], array("width" => 100, "height" => 100), BX_RESIZE_IMAGE_EXACT, true);
                 $colorValue['PICT']['SRC'] = $img_['src'];
                 $colorValue['PICT']['WIDTH'] = $img_['width'];
                 $colorValue['PICT']['HEIGHT'] = $img_['height'];
@@ -181,10 +181,10 @@ $arViewedData = array(
                         $title = $arFirstPhoto["TITLE"];
                         ?>
                         <? if ($arFirstPhoto["BIG"]["src"]) { ?>
-                            <? $img_ = CFile::ResizeImageGet($arFirstPhoto["ID"], array( "width" => 320, "height" => 320 ), BX_RESIZE_IMAGE_EXACT, true );?>
+                            <? $img_ = CFile::ResizeImageGet($arFirstPhoto["ID"], array("width" => 320, "height" => 320), BX_RESIZE_IMAGE_EXACT, true); ?>
                             <a href="<?= $arFirstPhoto["BIG"]["src"] ?>" class="fancy_offer" title="<?= $title; ?>">
                                 <img id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PICT']; ?>"
-                                     <?/*src="<?= $arFirstPhoto['SMALL']['src']; ?>" alt="<?= $alt; ?>"*/?>
+                                    <? /*src="<?= $arFirstPhoto['SMALL']['src']; ?>" alt="<?= $alt; ?>"*/ ?>
                                      src="<?= $img_['src']; ?>" alt="<?= $alt; ?>"
                                      title="<?= $title; ?>" itemprop="image">
                             </a>
@@ -247,14 +247,14 @@ $arViewedData = array(
                     </div>
                 <? endif; ?>
             <? } else { ?>
-                <?/*
+                <? /*
                 <div class="wrapp_thumbs">
                     <div class="sliders">
                         <div class="thumbs" style="">
                         </div>
                     </div>
                 </div>
-                */?>
+                */ ?>
             <? } ?>
         </div>
         <? /*mobile*/ ?>
@@ -936,7 +936,7 @@ $arViewedData = array(
         <? endif; ?>
 
         <li class="<?= (!($iTab++) ? ' current' : '') ?>">
-            <span><?php /*echo GetMessage("QUANTITY_TAB_NAME"); */?> Наличие </span>
+            <span><?php /*echo GetMessage("QUANTITY_TAB_NAME"); */ ?> Наличие </span>
         </li>
 
         <? if ($arVideo): ?>
@@ -1587,12 +1587,13 @@ $arViewedData = array(
 
         <li class="<?= (!($iTab++) ? ' current' : '') ?>">
             <div class="availability-name margin-bottom">
-                <?php echo ($arResult['NAME']); ?>,
+                <?php echo($arResult['NAME']); ?>,
                 <span class="availability-offer-value"></span>
             </div>
 
             <!-- How much products in the shop -->
             <?php
+
             //создаем класс со значениями остатка и наименования магазина
             class StoreProductSKU
             {
@@ -1607,23 +1608,16 @@ $arViewedData = array(
                     $this->namestore = $namestore;
                     $this->amount = $amount;
                     ?>
-                    <?php foreach ($this->skuid as $key => $value) { ?>
-                    <div class="<?php echo $value ?>">
-                        <?php
-                        for ($r = 0; $r < count($this->namestore); $r++) { ?>
-                            <?php $quantity = $this->amount[$key + $r] ?>
-
-                                <p>
-                                    <?php echo $this->namestore[$r] ?>
-                                    - <?php echo $quantity; ?>
-                                </p>
-
-                        <?php } ?>
+                    <div class="<?php echo $this->skuid ?>">
+                        <p>
+                            <?php echo $this->namestore ?>
+                            - <?php echo $this->amount ?>
+                        </p>
                     </div>
                     <?php
                 }
-                }
             }
+
             ?>
 
             <div class="quantity">
@@ -1653,27 +1647,16 @@ $arViewedData = array(
                     }
 
                     CModule::IncludeModule('catalog');
-                    $dataStore = [];
-                    $nameStore = [];
+                    $quant = new StoreProductSKU();
                     foreach ($skuid as $keyid => $id) {
                         foreach ($stores as $ketstore => $stor) {
-                            $arFilter = Array("PRODUCT_ID"=>$id,"STORE_ID"=>$ketstore);
-                            $res = CCatalogStoreProduct::GetList(Array(),$arFilter,false,false,Array());
+                            $arFilter = Array("PRODUCT_ID" => $id, "STORE_ID" => $ketstore+1);
+                            $res = CCatalogStoreProduct::GetList(Array(), $arFilter, false, false, Array());
                             if ($arRes = $res->GetNext()) {
-                                //$nameStore[$arRes["STORE_NAME"]] = $arRes["AMOUNT"];
-                                $dataStore[$arRes["STORE_NAME"]] = [$arRes["PRODUCT_ID"]];
-                                ?><pre><?php
-                                //var_dump($ressku);
-                                //var_dump($arRes);
-                                ?></pre><?php
+                                $quant->EchoAmount($arRes["PRODUCT_ID"], $arRes["STORE_NAME"], $arRes["AMOUNT"]);
                             }
                         }
                     }
-
-                    ?><pre><?php
-                    //var_dump($ressku);
-                    var_dump($dataStore);
-                    ?></pre><?php
                 } else {
                     echo GetMessage("QUANTITY_NO_OFFERS_MESSAGE");
                 }
@@ -1705,7 +1688,7 @@ $arViewedData = array(
                         if (targ[r].className != pid) {
                             targ[r].style.display = "none";
                         } else {
-                            targ[r].style.display = "inline-block";
+                            targ[r].style.display = "block";
                         }
                     }
 
